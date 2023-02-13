@@ -1,0 +1,11 @@
+*.log
+*.pot
+*.pyc
+__pycache__/
+db.sqllite3
+db.sqllite3-journal
+.vscode
+static
+media
+env
+local_settings.py
