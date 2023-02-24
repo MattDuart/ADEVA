@@ -2,6 +2,39 @@ from django.db import models
 from configuracoes.models import *
 
 # Create your models here.
+
+
+class ArquivosContabeis(models.Model):
+      data = models.DateField(
+              "Data do upload",
+              auto_now=True,
+              db_index=True
+      )      
+      descricao = models.CharField(
+           "Descrição do Arquivo",
+           max_length=50
+      )
+      TIPO_ARQUIVO = [
+           ('NF', 'Nota Fiscal'),
+           ('BL', 'Boleto'),
+           ('CP', 'Comprovante'),
+           ('EX', 'Extrato'),
+           ('RC', 'Recibo'),
+           ('OT', 'Outro')
+      ]
+      image = models.ImageField(
+           "Arquivo a ser carregado",
+           upload_to="documentos"
+      )
+      class Meta:
+            ordering = ('data',)
+            verbose_name = "Arquivo Suporte Contábil"
+            verbose_name_plural = "Arquivos de Suporte Contábil"
+      def __str__(self):
+            return self.descricao
+
+
+
 class PagarReceber(models.Model):
         data_lcto = models.DateField(
               "Data do Lançamento",
@@ -29,6 +62,12 @@ class PagarReceber(models.Model):
             on_delete=models.PROTECT,
             verbose_name="Projeto"
         )
+        item_orcamento = models.ForeignKey(
+            ItensOrcamento,
+            related_name='lcto_orc',
+            on_delete=models.PROTECT,
+            verbose_name="Item Orçamentário"
+        )
         nro_docto = models.CharField(
               "Número do Documento",
               null=True,
@@ -55,6 +94,14 @@ class PagarReceber(models.Model):
             choices= STATUS_PGTO,
             default='AB',
         )
+        arquivo_suporte = models.ForeignKey(
+            ArquivosContabeis,
+            related_name='lcto_arq',
+            on_delete=models.PROTECT,
+            verbose_name="Arquivo de Suporte Contábil",
+            null = True
+        )
+
         observacoes = models.TextField(
         null=True,
         blank=True,
@@ -66,7 +113,7 @@ class PagarReceber(models.Model):
             verbose_name = "Conta Pagar/Receber"
             verbose_name_plural = "Contas a Pagar/Receber"
         def __str__(self):
-            return self.descricao
+            return f"{self.descricao} vencimento {self.data_vcto.strftime('%d/%m/%Y')}"
 
 
 
@@ -129,33 +176,5 @@ class MovimentosCaixa(models.Model):
             verbose_name = "Movimentação de Caixa"
             verbose_name_plural = "Movimentações de Caixa"
         def __str__(self):
-            return self.historico
+            return f"{self.historico} em {self.data_lcto.strftime('%d/%m/%Y')}"
 
-class ArquivosContabeis(models.Model):
-      data = models.DateField(
-              "Data do upload",
-              auto_now=True,
-              db_index=True
-      )      
-      descricao = models.CharField(
-           "Descrição do Arquivo",
-           max_length=50
-      )
-      TIPO_ARQUIVO = [
-           ('NF', 'Nota Fiscal'),
-           ('BL', 'Boleto'),
-           ('CP', 'Comprovante'),
-           ('EX', 'Extrato'),
-           ('RC', 'Recibo'),
-           ('OT', 'Outro')
-      ]
-      image = models.ImageField(
-           "Arquivo a ser carregado",
-           upload_to="documentos"
-      )
-      class Meta:
-            ordering = ('data',)
-            verbose_name = "Arquivo Suporte Contábil"
-            verbose_name_plural = "Arquivos de Suporte Contábil"
-      def __str__(self):
-            return self.descricao

@@ -20,7 +20,7 @@ class Especie(models.Model):
     #usado para marcar especies de títulos com caráter provisório, ex: adiantamentos
     definitivo = models.BooleanField(
         default=True,       
-        help_text="Marcar falso se tiver caráter provisório. Exemplo: adiantamento."
+        help_text="Desmarcar se tiver caráter provisório. Exemplo: adiantamento."
     )
     #para exigir número de documento no momento do cadastro
     exige_numero = models.BooleanField("Exige número de documento?",
@@ -122,4 +122,18 @@ class CentrosCustos(models.Model):
         verbose_name_plural = "Projetos"
     def __str__(self):
         return self.descricao
+
+
+class ItensOrcamento (models.Model):
+    descricao = models.CharField(
+        "Item Orçamentário",
+        max_length=50
+    )
+    class Meta:
+        ordering = ('descricao',)
+        verbose_name = "Item Orçamentário"
+        verbose_name_plural = "Itens Orçamentários"
+    def __str__(self):
+        return self.descricao
+
     
