@@ -1,5 +1,7 @@
 from django.db import models
 from pessoas.models import Pessoa
+from django.contrib import admin
+
 
 # Create your models here.
 class Especie(models.Model):
@@ -135,5 +137,8 @@ class ItensOrcamento (models.Model):
         verbose_name_plural = "Itens Orçamentários"
     def __str__(self):
         return self.descricao
+    
+        
+    
 
     
