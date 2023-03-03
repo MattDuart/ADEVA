@@ -29,7 +29,7 @@ class Pessoa(models.Model):
 
 # Create your models here.
 class PessoaFisica(models.Model):
-    pessoa = models.ForeignKey(
+    pessoa = models.OneToOneField(
         Pessoa,
         related_name='pessoasfisicas',
         on_delete=models.CASCADE
@@ -93,7 +93,7 @@ class PessoaFisica(models.Model):
         return self.cpf
 
 class PessoaJuridica(models.Model):
-    pessoa = models.ForeignKey(
+    pessoa = models.OneToOneField(
         Pessoa,
         related_name='pessoasjuridicas',
         on_delete=models.CASCADE
