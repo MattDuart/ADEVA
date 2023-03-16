@@ -9,7 +9,7 @@ from .models import PagarReceber, MovimentosCaixa, ArquivosContabeis
 
 @receiver(pre_save,sender=MovimentosCaixa)
 def update_verification(sender, instance, **kwargs):
-    instance.new_value = 0
+    instance.new_value = -1
     try:
         old_instance = MovimentosCaixa.objects.get(id=instance.id)
         lcto = old_instance.lcto_ref
@@ -18,6 +18,13 @@ def update_verification(sender, instance, **kwargs):
             valor = old_instance.valor
             valor_anterior = lcto.valor_pago
             lcto.valor_pago = valor_anterior - valor
+            if(lcto.valor_pago >= lcto.valor_docto):
+                lcto.status = 'TP'
+            elif(lcto.valor_pago < lcto.valor_docto and lcto.valor_pago > 0):
+               lcto.status = 'PP'
+            else:
+                lcto.valor_pago = 0
+                lcto.status = 'AB'
             lcto.save()
             instance.new_value = lcto.valor_pago
             
@@ -37,11 +44,15 @@ def set_pagar_receber(sender,instance,created,**kwargs):
         lcto = instance.lcto_ref
         valor = instance.valor
         valor_anterior = lcto.valor_pago
-        if (instance.new_value > 0):
+        if (instance.new_value >= 0):
             valor_anterior = instance.new_value
-
-        print(valor_anterior)
         lcto.valor_pago = valor_anterior + valor
+        if(lcto.valor_pago >= lcto.valor_docto):
+            lcto.status = 'TP'
+        elif(lcto.valor_pago < lcto.valor_docto and lcto.valor_pago > 0):
+            lcto.status = 'PP'
+        else:
+            lcto.status = 'AB'
         lcto.save()
             
 @receiver(post_delete,sender=MovimentosCaixa)
@@ -52,5 +63,12 @@ def delete_profile(sender,instance,*args,**kwargs):
                 valor = instance.valor
                 valor_anterior = lcto.valor_pago
                 lcto.valor_pago = valor_anterior - valor
+                if(lcto.valor_pago >= lcto.valor_docto):
+                    lcto.status = 'TP'
+                elif(lcto.valor_pago < lcto.valor_docto and lcto.valor_pago > 0):
+                    lcto.status = 'PP'
+                else:
+                    lcto.status = 'AB'
+        
                 lcto.save()
             

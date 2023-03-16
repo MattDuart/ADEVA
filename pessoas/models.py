@@ -3,12 +3,18 @@ from django.db import models
 # Create your models here.
 
 class Pessoa(models.Model):
+    TIPO_PESSOA = [
+           ('J', 'Jurídica'),
+           ('F', 'Física')
+      ]
     nome = models.CharField(
         max_length= 250
     )
     tipo = models.CharField(
         max_length=1,
-        db_index=True
+        db_index=True,
+        choices= TIPO_PESSOA,
+        default='J'
     )
     site = models.CharField(
         max_length=150,
@@ -232,6 +238,7 @@ class Atribuicao(models.Model):
 
 
 class PessoaAtribuicao(models.Model):
+
     pessoa = models.ForeignKey(
         Pessoa,
         related_name='pessoas',

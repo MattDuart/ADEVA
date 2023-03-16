@@ -1,6 +1,7 @@
 from django.db import models
 from configuracoes.models import *
 from django.contrib import admin
+from django import forms
 
 # Create your models here.
 
@@ -45,6 +46,13 @@ class PagarReceber(models.Model):
         descricao = models.CharField(
              "Descrição do Lançamento",
              max_length=100
+        )
+        pessoa = models.ForeignKey(
+            Pessoa,
+            related_name='lcto_pess',
+            on_delete=models.PROTECT,
+            verbose_name="Pessoa",
+            null = True
         )
         data_vcto = models.DateField(
               "Data do Vencimento",
@@ -134,6 +142,9 @@ class MovimentosCaixa(models.Model):
             "Data da Movimentação",
             db_index=True
         )
+
+        
+
         valor = models.DecimalField(
             max_digits=12,
             decimal_places=2
@@ -177,6 +188,8 @@ class MovimentosCaixa(models.Model):
             ordering = ('data_lcto',)
             verbose_name = "Movimentação de Caixa"
             verbose_name_plural = "Movimentações de Caixa"
+            
+
         def __str__(self):
             return f"{self.historico} em {self.data_lcto.strftime('%d/%m/%Y')}"
         
