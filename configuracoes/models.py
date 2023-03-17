@@ -84,6 +84,22 @@ class Contas(models.Model):
         null = True,
         blank=True
     )
+    TIPOS_PIX = [
+        ('D', 'CPF/CNPJ'),
+        ('T', 'Celular'),
+        ('E', 'Email'),
+        ('B', 'Agência e Conta'),
+        ('A', 'Chave Aleatória'),
+        
+    ]
+
+    tipo = models.CharField(
+        "Tipo da Chave Pix",
+        max_length=1,
+        choices= TIPOS_PIX,
+        default='D',
+    )
+
     chave_pix = models.CharField(
         "Chave Pix",
         max_length=32,
