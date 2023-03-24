@@ -9,7 +9,7 @@ from django.db import models
 from .models import PagarReceber, MovimentosCaixa, ArquivosContabeis
 from django.contrib.admin.filters import SimpleListFilter
 
-
+@admin.action(description='Exportar para Excel')
 def export_to_xlsx(modeladmin, request, queryset):
     opts = modeladmin.model._meta
     dateTimeObj = datetime.datetime.now()
@@ -19,44 +19,75 @@ def export_to_xlsx(modeladmin, request, queryset):
     response['Content-Disposition'] = content_disposition
     workbook = xlsxwriter.Workbook(response, {'in_memory': True})
     worksheet = workbook.add_worksheet()
+    date_format = workbook.add_format({'num_format': 'dd/mm/YYYY'})
+
     fields = [field for field in opts.get_fields() \
                if not field.one_to_many and not isinstance(field, models.ForeignKey)]
-    header_list = [field.name for field in fields]
-    movimentos = MovimentosCaixa.objects.all()
-    for movimento in movimentos:
-        header_list.append(f'{movimento.data_lcto}')
-        header_list.append(f'{movimento.historico}')
-        header_list.append(f'{movimento.valor}')
+    
+    header_list = []
+    for field in fields:
+        if field.name not in ['id', 'tipo', 'valor']:
+            header_list.append(f'{field.verbose_name}')
 
+    header_list.append("Entrada")
+    header_list.append("Saída")
+    header_list.append("Saldo")
+    
+    movimentos = MovimentosCaixa.objects.all()
+    
+    for movimento in movimentos:
         for column, item in enumerate(header_list):
             worksheet.write(0, column, item)
 
+        saldo = 0
         for row, obj in enumerate(queryset):
             data_row = []
-            total = 0
+            
+            print(len(fields))
+            i = 0
+            entrada = ''
+            saida = ''
+
 
             for field in fields:
                 value = getattr(obj, field.name)
+                i += 1
+                
                 if field.name == 'valor':
-                    total += value
-                if isinstance(value, datetime.datetime):
-                    value = value.strftime('%d %m %Y')
-                data_row.append(value)
+                    if getattr(obj, 'tipo') in ['SI', 'PR']:
+                        saldo += value
+                        entrada = value
+                    if getattr(obj, 'tipo') == 'PG':
+                        saldo -= value
+                        saida = value
+                    if getattr(obj, 'tipo') == "TR":
+                        # fazer lógica
+                        saida = ''
+                        entrada = ''
 
+
+                if field.name == 'data_lcto':
+                    print(value)
+                    value = value.strftime('%d/%m/%Y')
+                    print(value)
+
+                if field.name not in ['id', 'tipo', 'valor']:
+                    data_row.append(f'{value}')
+                if i == len(fields):
+                    data_row.append(f'{entrada}')
+                    data_row.append(f'{saida}')
+                    data_row.append(f'{saldo}')
+                print(data_row)
                 for column, item in enumerate(data_row):
                     worksheet.write(row + 1, column, item)
 
     workbook.close()
 
     return response
-export_to_xlsx.shortdescription ='Exportar para Excel'        
 
 
 
-
-
-
-
+ 
 
 
 

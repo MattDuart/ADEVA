@@ -146,6 +146,7 @@ class MovimentosCaixa(models.Model):
         
 
         valor = models.DecimalField(
+            "Valor",
             max_digits=12,
             decimal_places=2
         )
