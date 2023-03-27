@@ -4,9 +4,16 @@ import datetime
 import xlsxwriter
 from django.http import HttpResponse
 from django.db import models
+from rangefilter.filters import DateRangeFilter, DateTimeRangeFilter, NumericRangeFilter
+from django_filters import filters
+from django_filters import ModelChoiceFilter
+from django.db.models import Q
+from django.utils import timezone
+from django.http import QueryDict
 
 # Register your models here.
 from .models import PagarReceber, MovimentosCaixa, ArquivosContabeis
+from configuracoes.models import Contas
 from django.contrib.admin.filters import SimpleListFilter
 
 @admin.action(description='Exportar para Excel')
@@ -127,11 +134,32 @@ class FiltroRecebimentos(SimpleListFilter):
         if self.value() == 'pgto_vencidos':
             return queryset.filter(especie__tipo = 'D').filter(data_vcto__lt = today).filter(status__in =['AB', 'PP'])
 
+class ContasFilter(SimpleListFilter):
+    title = 'Contas'
+    parameter_name = 'conta'
 
+    def lookups(self, request, model_admin):
+        qs = Contas.objects.all()
+        return [(str(item.pk), str(item)) for item in qs]
 
+    def queryset(self, request, queryset):
+        if self.value():
+            value = self.value()
+            queryset = queryset.filter(
+                Q(conta_origem__id=value) | Q(conta_destino__id=value)
+            )
+            return queryset
 
-
-
+class CustomDateRangeFilter(DateRangeFilter):
+    def __init__(self, request, params, model, model_admin, *args, **kwargs):
+      #  params_copy = QueryDict('', mutable=True)
+      #  print(params)
+      #  params_copy.update(params)
+      #  print(params)
+      #  params_copy.pop('data_lcto__gte', None)
+      #   params_copy.pop('data_lcto__lt', None) 
+     #   print(params_copy)
+        super().__init__(request, params, model, model_admin, *args, **kwargs)
 
 
 # Register your models here.
@@ -144,7 +172,9 @@ class PagarReceberAdmin(admin.ModelAdmin):
 class MovimentoAdmin(admin.ModelAdmin):
     form = MovimentoFormAdmin
     actions = [export_to_xlsx]
-    list_filter = ('data_lcto',)
+    list_filter = (
+        ContasFilter,'data_lcto', ('data_lcto', CustomDateRangeFilter), 
+    )
     class Media:
         js = ("jquery-3.6.3.min.js","form.js",)
 

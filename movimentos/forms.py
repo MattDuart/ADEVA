@@ -35,3 +35,8 @@ class MovimentoFormAdmin(forms.ModelForm):
             if conta_origem is not None:
                 raise ValidationError("Lançamento tipo recebimento não deve ter valores de conta de origem")
    
+
+
+class DateRangeForm(forms.Form):
+    start_date = forms.DateField(label='Data de Início')
+    end_date = forms.DateField(label='Data de Fim')
