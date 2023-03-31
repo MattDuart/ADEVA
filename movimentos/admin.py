@@ -5,11 +5,9 @@ import xlsxwriter
 from django.http import HttpResponse
 from django.db import models
 from rangefilter.filters import DateRangeFilter, DateTimeRangeFilter, NumericRangeFilter
-from django_filters import filters
-from django_filters import ModelChoiceFilter
 from django.db.models import Q
-from django.utils import timezone
-from django.http import QueryDict
+from django.contrib.admin.filters import DateFieldListFilter
+from django.contrib.admin.views.main import ChangeList
 
 # Register your models here.
 from .models import PagarReceber, MovimentosCaixa, ArquivosContabeis
@@ -28,6 +26,7 @@ def export_to_xlsx(modeladmin, request, queryset):
     worksheet = workbook.add_worksheet()
     date_format = workbook.add_format({'num_format': 'dd/mm/YYYY'})
 
+
     fields = [field for field in opts.get_fields() \
                if not field.one_to_many and not isinstance(field, models.ForeignKey)]
     
@@ -40,53 +39,57 @@ def export_to_xlsx(modeladmin, request, queryset):
     header_list.append("Saída")
     header_list.append("Saldo")
     
-    movimentos = MovimentosCaixa.objects.all()
+    menor_id = queryset.aggregate(menor_id=models.Min('id'))['menor_id']
+    print(menor_id)
+        
     
-    for movimento in movimentos:
-        for column, item in enumerate(header_list):
-            worksheet.write(0, column, item)
+    for column, item in enumerate(header_list):
+        worksheet.write(0, column, item)
 
-        saldo = 0
-        for row, obj in enumerate(queryset):
-            data_row = []
+    saldo = 0
+    for row, obj in enumerate(queryset):
+        data_row = []
+        teste = obj.lcto_ref 
+        if teste is not None:
+            print(teste.centro_custo)
+        
+
+        i = 0
+        entrada = ''
+        saida = ''
+
+
+        for field in fields:
+            value = getattr(obj, field.name)
+            i += 1
             
-            print(len(fields))
-            i = 0
-            entrada = ''
-            saida = ''
+            if field.name == 'valor':
+                if getattr(obj, 'tipo') in ['SI', 'PR']:
+                    saldo += value
+                    entrada = value
+                if getattr(obj, 'tipo') == 'PG':
+                    saldo -= value
+                    saida = value
+                if getattr(obj, 'tipo') == "TR":
+                    # fazer lógica
+                    saida = ''
+                    entrada = ''
 
 
-            for field in fields:
-                value = getattr(obj, field.name)
-                i += 1
-                
-                if field.name == 'valor':
-                    if getattr(obj, 'tipo') in ['SI', 'PR']:
-                        saldo += value
-                        entrada = value
-                    if getattr(obj, 'tipo') == 'PG':
-                        saldo -= value
-                        saida = value
-                    if getattr(obj, 'tipo') == "TR":
-                        # fazer lógica
-                        saida = ''
-                        entrada = ''
+            if field.name == 'data_lcto':
+                #print(value)
+                value = value.strftime('%d/%m/%Y')
+                #print(value)
 
-
-                if field.name == 'data_lcto':
-                    print(value)
-                    value = value.strftime('%d/%m/%Y')
-                    print(value)
-
-                if field.name not in ['id', 'tipo', 'valor']:
-                    data_row.append(f'{value}')
-                if i == len(fields):
-                    data_row.append(f'{entrada}')
-                    data_row.append(f'{saida}')
-                    data_row.append(f'{saldo}')
-                print(data_row)
-                for column, item in enumerate(data_row):
-                    worksheet.write(row + 1, column, item)
+            if field.name not in ['id', 'tipo', 'valor']:
+                data_row.append(f'{value}')
+            if i == len(fields):
+                data_row.append(f'{entrada}')
+                data_row.append(f'{saida}')
+                data_row.append(f'{saldo}')
+            #print(data_row)
+            for column, item in enumerate(data_row):
+                worksheet.write(row + 1, column, item)
 
     workbook.close()
 
@@ -150,17 +153,47 @@ class ContasFilter(SimpleListFilter):
             )
             return queryset
 
-class CustomDateRangeFilter(DateRangeFilter):
-    def __init__(self, request, params, model, model_admin, *args, **kwargs):
-      #  params_copy = QueryDict('', mutable=True)
-      #  print(params)
-      #  params_copy.update(params)
-      #  print(params)
-      #  params_copy.pop('data_lcto__gte', None)
-      #   params_copy.pop('data_lcto__lt', None) 
-     #   print(params_copy)
-        super().__init__(request, params, model, model_admin, *args, **kwargs)
 
+class MyChangeList(ChangeList):
+    def get_filters(self, request):
+        filters = super().get_filters(request)
+        my_filter_value = request.GET.get('data_lcto__range__gte')
+    
+        new_filters = []  
+
+            
+        if my_filter_value:
+            # Se o filtro "my_change" estiver definido, remova o filtro "other_change".
+    
+            for f in filters[0]:
+                if isinstance(f, DateFieldListFilter) == False:
+                    new_filters.append(f)
+        else:
+            new_filters = filters[0]
+    
+    
+        filters = list(filters)
+        filters[0] = new_filters
+        filters = tuple(filters)
+
+
+        
+        return filters
+
+
+
+class CustomDateRangeFilter(DateRangeFilter):
+    def __init__(self, *args, **kwargs):
+        super(CustomDateRangeFilter, self).__init__(*args, **kwargs)
+"""   
+        self.used_parameters['data_lcto__gte'] = (datetime.now() - timedelta(weeks=-5000)).strftime('%Y-%m-%d')
+        self.used_parameters['data_lcto__lt'] = (datetime.now() - timedelta(weeks=5000)).strftime('%Y-%m-%d')
+
+        def queryset(self, request, queryset):
+            # Usa os novos valores de start_date e end_date para filtrar o queryset
+            queryset = super(CustomDateRangeFilter, self).queryset(request, queryset)
+            return queryset
+"""
 
 # Register your models here.
 @admin.register(PagarReceber)
@@ -172,9 +205,12 @@ class PagarReceberAdmin(admin.ModelAdmin):
 class MovimentoAdmin(admin.ModelAdmin):
     form = MovimentoFormAdmin
     actions = [export_to_xlsx]
+    list_per_page = 2000
     list_filter = (
         ContasFilter,'data_lcto', ('data_lcto', CustomDateRangeFilter), 
     )
+    def get_changelist(self, request, **kwargs):
+        return MyChangeList
     class Media:
         js = ("jquery-3.6.3.min.js","form.js",)
 
