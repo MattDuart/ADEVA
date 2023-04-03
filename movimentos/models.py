@@ -167,7 +167,8 @@ class MovimentosCaixa(models.Model):
                 related_name='mov_conta_origem',
                 null=True,
                 blank=True,
-                verbose_name="Conta de Origem"
+                verbose_name="Conta de Origem",
+                default = None
         )
         conta_destino = models.ForeignKey(
                 Contas,
@@ -175,7 +176,8 @@ class MovimentosCaixa(models.Model):
                 related_name='mov_conta_destino',
                 null=True,
                 blank=True,
-                verbose_name="Conta de Destino"
+                verbose_name="Conta de Destino",
+                default = None
         )
         lcto_ref = models.ForeignKey(
                 PagarReceber,
@@ -186,7 +188,7 @@ class MovimentosCaixa(models.Model):
                 verbose_name="Lançamento de Referência"
         )
         class Meta:
-            ordering = ('data_lcto',)
+            ordering = ('data_lcto', "id")
             verbose_name = "Movimentação de Caixa"
             verbose_name_plural = "Movimentações de Caixa"
             
