@@ -16,6 +16,10 @@ from django.contrib.admin.filters import SimpleListFilter
 from django.db.models import Sum
 
 def calcula_saldo(id_conta='all', start_id=0):
+    # usa star_id supondo que os movimentos são lançados em ordem de data
+    # fazer por data poderia dat conflito se não forem escolhidos todos os lctos de uma data
+    # na rotina por mês fechado esta função ficará mais adequada
+
     entradas = 0
     saidas = 0 
 
