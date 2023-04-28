@@ -2,7 +2,7 @@
 from django.shortcuts import render
 from .models import MovimentosCaixa, CentrosCustos, ItensOrcamento
 from django.http import HttpResponse
-
+from django.contrib import admin
 
 
 def movimentos_caixa_list(request):
@@ -18,6 +18,9 @@ def movimentos_caixa_list(request):
                     'orcamentos': orcementos
                   })
 
+
 def fechamento_view(request):
-    return render(request, 'fechamento.html')
+    context = admin.site.each_context(request)
+    # Add custom context data here
+    return render(request, 'fechamento.html', context=context)
 

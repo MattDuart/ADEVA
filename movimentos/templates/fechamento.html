@@ -1,6 +1,13 @@
-{% extends 'admin/base_site.html' %}
+{% extends "admin/base_site.html" %}
 
 {% block content %}
-  <h1>My Custom App Template</h1>
-  <p>This is my custom contentjkhkhj.</p>
+    <!-- Custom content here -->
+    <p>Digite o mês e o ano desejados para geração do livro caixa:</p>
+    <form action="#" method="post">
+    <label>Mês
+    <input type ="number" name="mes" id="mes"></label>
+    <label>Ano
+    <input type ="number" name="ano" id="ano"></label>
+    <input type="submit">
+    </form>
 {% endblock %}

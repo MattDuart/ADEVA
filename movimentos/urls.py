@@ -1,5 +1,9 @@
 from django.urls import path
 from . import views
+from .models import MovimentosCaixa
+from django.contrib import admin
+from . import views
+
 
 app_name = 'movimentos'
  
@@ -8,3 +12,4 @@ urlpatterns = [
      path('fechamento/', views.fechamento_view, name='fechamento'),
      #path('test/', views.test_view, name='test'),
 ]
+

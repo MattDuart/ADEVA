@@ -2,8 +2,6 @@ from django.contrib import admin
 from django.apps import apps
 
 class MyAdminSite(admin.AdminSite):
-    
-    
     def get_app_list(self, request, app_label=None):
         """
         Return a sorted list of all the installed apps that have been
@@ -30,11 +28,9 @@ class MyAdminSite(admin.AdminSite):
 
         app_list = sorted(app_dict.values(), key=my_key)
 
-        #print(app_list)
         def my_model_key(model):
             ordering_list = ['Contas a Pagar/Receber', 'Movimentações de Caixa']  # lista de ordenação pré-definida
             model_name = model['name']
-            print(model_name)
             if model_name in ordering_list:
         # retorna um tupla com dois valores:
         # o índice do modelo na lista de ordenação pré-definida (menor vem primeiro)
@@ -52,5 +48,3 @@ class MyAdminSite(admin.AdminSite):
                 app["models"].sort(key=lambda x: x["name"])
 
         return app_list
-
-    
