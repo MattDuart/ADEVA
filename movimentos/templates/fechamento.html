@@ -3,11 +3,20 @@
 {% block content %}
     <!-- Custom content here -->
     <p>Digite o mês e o ano desejados para geração do livro caixa:</p>
-    <form action="#" method="post">
-    <label>Mês
+    <form action="{% url 'movimentos:relatorio_fechamento' %}" method="post">
+    {% csrf_token %}
+    <label for="mes">Mês
     <input type ="number" name="mes" id="mes"></label>
-    <label>Ano
+    <label for="ano">Ano
     <input type ="number" name="ano" id="ano"></label>
+    <label for="conta">Conta
+    <select name="conta" id="conta">
+    <option value="all">Relatório Geral</option>
+    {% for conta in contas %}
+        <option value="{{ conta.id }}">{{ conta.nome }}</option>
+    {% endfor %}
+    </select>
+    </label>
     <input type="submit">
     </form>
 {% endblock %}
