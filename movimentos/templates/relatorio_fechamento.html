@@ -13,6 +13,11 @@
     <br>
     <input type="submit" id="excel" value="Gerar Excel"></input>
     </form>    
+    {% for item in query %}
+    <pre>{{ item.conta_destino }}</pre>
+    {% endfor %}
+
+
     <script src="{% static 'buttons.js' %}"></script>
 {% endblock %}
 

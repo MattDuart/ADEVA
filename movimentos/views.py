@@ -48,7 +48,20 @@ def gerar_pdf(request):
 
 
 
-def get_movimentos_caixa_by_month_year(month, year, account='all'):
+def get_movimentos_caixa_by_month_year(month, year, account='all', saldo_inicial=0):
+
+    array_final = []
+    cabecalho = ['Data da Movimentação', 
+                 'Histórico - descrição da movimentação',
+                 'Conta de Origem',
+                 'Conta de Destino',
+                 'Lançamento de Referência',
+                 'Projeto',
+                 'Item Orçamentário',
+                 'Entrada',
+                 'Saída',
+                 'Saldo']
+    
 
     last_day = calendar.monthrange(year, month)[1]
     start_date = datetime(year=year, month=month, day=1)
@@ -58,11 +71,69 @@ def get_movimentos_caixa_by_month_year(month, year, account='all'):
 
 
     if account == 'all':
-        retorno = MovimentosCaixa.objects.filter(Q(data_lcto__gte=start_date) & Q(data_lcto__lte=end_date)).exclude(Q(tipo='TR'))
+        retorno = MovimentosCaixa.objects.filter(Q(data_lcto__gte=start_date) & Q(data_lcto__lte=end_date)).exclude(Q(tipo='TR')).order_by('data_lcto')
     else:
-        retorno = MovimentosCaixa.objects.filter(Q(data_lcto__gte=start_date) & Q(data_lcto__lte=end_date) & Q(conta_origem=account))       
+        retorno = MovimentosCaixa.objects.filter(Q(data_lcto__gte=start_date) & Q(data_lcto__lte=end_date) & Q(conta_origem=account)).order_by('data_lcto')       
     
-    return retorno
+
+
+    saldo = saldo_inicial
+
+    for item in retorno:
+        data_lancamento = item.data_lcto
+        historico = item.historico
+        origem = item.conta_origem
+        destino = item.conta_destino
+        if item.lcto_ref is not None:
+            referencia = item.lcto_ref.descricao if item.lcto_ref.descricao else ''
+            projeto = item.lcto_ref.centro_custo if item.lcto_ref.centro_custo else '' 
+            orcamento = item.lcto_ref.item_orcamento if item.lcto_ref.item_orcamento else '' 
+        else:
+            referencia = ''
+            projeto = ''
+            orcamento = ''
+        
+        entrada = ''
+        saida = ''
+
+        if item.tipo == 'SI':
+            entrada = item.valor
+            saida = ''
+            saldo += entrada
+        elif item.tipo == 'PG':
+            saida = item.valor
+            entrada = ''
+            saldo -= saida
+        elif item.tipo == 'PR':
+            entrada = item.valor
+            saida = ''
+            saldo += entrada
+        elif item.tipo == 'TR':
+            if item.conta_destino == account:
+                entrada = item.valor
+                saida = ''
+                saldo += entrada
+            if item.conta_origem == account:
+                saida = item.valor
+                entrada = ''
+                saldo -= saida
+
+        linha = [data_lancamento,
+                 historico,
+                 origem,
+                 destino,
+                 referencia,
+                 projeto,
+                 orcamento,
+                 entrada,
+                 saida,
+                 saldo]
+        
+        array_final.append(linha)
+
+    
+
+    return cabecalho, array_final, saldo
 
 
 
@@ -86,6 +157,8 @@ def get_movimentos_caixa_sum_previous(month, year, account='all'):
         retorno = entradas - saidas
 
     return retorno
+
+    
 
 
 
@@ -114,7 +187,7 @@ def fechamento_view(request):
 def rel_fechamento_view(request):
     if request.POST['conta'] == 'all':
         conta_id = 'all'
-        conta['nome'] = 'Relatório Geral'
+        conta = 'Relatório Geral'
     else:
         conta_id = request.POST['conta']
         conta = get_object_or_404(Contas, id=request.POST['conta'])
@@ -124,18 +197,23 @@ def rel_fechamento_view(request):
 
     #### só pra testar, tirar
     conta_id = 'all'
-       
 
-    query = get_movimentos_caixa_by_month_year(int(request.POST['mes']),int(request.POST['ano']), conta_id)
-    
-    print(query)
+
     soma = get_movimentos_caixa_sum_previous(int(request.POST['mes']),int(request.POST['ano']), conta_id)
+
+
+    cabecalho, query, saldo = get_movimentos_caixa_by_month_year(int(request.POST['mes']),int(request.POST['ano']), conta_id, soma)
+    
+    print(cabecalho)
+    print(query)
+    print(saldo)
 
     my_context = {
         'mes': request.POST['mes'],
         'ano': request.POST['ano'],
         'conta': conta,
-        'soma': soma
+        'soma': soma,
+        'query': query
     }
 
     context = admin.site.each_context(request)
