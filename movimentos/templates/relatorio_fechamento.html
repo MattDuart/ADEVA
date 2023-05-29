@@ -3,21 +3,86 @@
 
 
 {% block content %}
+    <link rel="stylesheet" type="text/css" href="{% static 'fechamento.css' %}" media="screen" />
+    <p> {{ conta }} </p>
     <p> {{ conta.nome }} </p>
     <p>Visualização Livro Caixa mês: {{ mes }} ano: {{ ano }} </p>
-    <p>Soma dos meses anteriores: {{ soma }}</p>
-    <form id="botoes" name="botoes">
-    {% csrf_token %}
-    <br>
-    <input type="submit" id="pdf" value="Gerar Pdf"></input>
-    <br>
-    <input type="submit" id="excel" value="Gerar Excel"></input>
-    </form>    
-    {% for item in query %}
-    <pre>{{ item.conta_destino }}</pre>
-    {% endfor %}
+    <p>Saldo do mês anterior (em R$): {{ soma }}</p>
+   
 
+    <form id="botoes" name="botoes" method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="saldo" value="{{ saldo }}">
+        <input type="hidden" name="soma" value="{{ soma }}">
+        <input type="hidden" name="mes" value="{{ mes }}">
+        <input type="hidden" name="ano" value="{{ ano }}">
+                <input type="hidden" name="cabecalho" value="{{ cabecalho }}">
+                        <input type="hidden" name="query" value="{{ query }}">
+        {% if conta != 'Relatório Geral' %}
+             <input type="hidden" name="conta" value="{{ conta.nome }}">
+        {% else %}
+            <input type="hidden" name="conta" value="{{ conta }}">
+        {% endif %}
+        <table>
+            <tr>
+                <td>
+                    <input type="submit" id="pdf" value="Gerar Pdf"></input>
+                </td>
+                <td>
+                    <input type="submit" id="excel" value="Gerar Excel"></input>
+                </td>
+            </tr>
+            
+        
 
+        <table>
+            <tr class="destaque">
+                {% for coluna in cabecalho %}
+                <td> {{ coluna }} </td>
+                
+                {% endfor %}
+            </tr>
+            <tr class="destaque">
+                {% for i in cabecalho %}
+                    {% if forloop.first %}
+                        <td> SALDO INICIAL </td>
+                    {% elif forloop.last %}
+                        <td class='ultima_coluna'> {{ soma }} </td>
+                    {% else %}
+                        <td></td>
+                    {% endif %}
+
+                {% endfor %}
+            </tr>
+            {% for linha in query %}
+                        <tr>
+                {% for col in linha %}
+               
+                {% if forloop.last %}
+                    <td class="ultima_coluna">{{ col }}</td>
+                {% else %}
+                    <td>{{ col }}</td>
+                {% endif %}
+                {% endfor %}
+            </tr>
+            
+            {% endfor %}
+            <tr class="destaque">
+                {% for i in cabecalho %}
+                    {% if forloop.first %}
+                        <td> SALDO FINAL </td>
+                    {% elif forloop.last %}
+                        <td class='ultima_coluna'> {{ saldo }} </td>
+                    {% else %}
+                        <td></td>
+                    {% endif %}
+
+                {% endfor %}
+            </tr>
+
+            
+        </table>
+    </form>
     <script src="{% static 'buttons.js' %}"></script>
 {% endblock %}
 

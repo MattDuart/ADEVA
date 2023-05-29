@@ -37,6 +37,10 @@ def gerar_excel(request):
 
 
 def gerar_pdf(request):
+    print('teste')
+
+    print(request.POST['query'])
+
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font('Arial', 'B', 16)
@@ -82,8 +86,8 @@ def get_movimentos_caixa_by_month_year(month, year, account='all', saldo_inicial
     for item in retorno:
         data_lancamento = item.data_lcto
         historico = item.historico
-        origem = item.conta_origem
-        destino = item.conta_destino
+        origem = item.conta_origem if item.conta_origem is not None else ''
+        destino = item.conta_destino if item.conta_destino is not None else ''
         if item.lcto_ref is not None:
             referencia = item.lcto_ref.descricao if item.lcto_ref.descricao else ''
             projeto = item.lcto_ref.centro_custo if item.lcto_ref.centro_custo else '' 
@@ -212,8 +216,10 @@ def rel_fechamento_view(request):
         'mes': request.POST['mes'],
         'ano': request.POST['ano'],
         'conta': conta,
-        'soma': soma,
-        'query': query
+        'soma': f"{soma:,.2f}".replace(",", ".").replace(".", ",", 1),
+        'query': query,
+        'saldo': saldo,
+        'cabecalho': cabecalho
     }
 
     context = admin.site.each_context(request)
