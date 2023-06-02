@@ -13,11 +13,13 @@
     <form id="botoes" name="botoes" method="POST">
         {% csrf_token %}
         <input type="hidden" name="saldo" value="{{ saldo }}">
+        <input type="hidden" name="conta" value="{{ conta.nome }}">
+
         <input type="hidden" name="soma" value="{{ soma }}">
         <input type="hidden" name="mes" value="{{ mes }}">
         <input type="hidden" name="ano" value="{{ ano }}">
-                <input type="hidden" name="cabecalho" value="{{ cabecalho }}">
-                        <input type="hidden" name="query" value="{{ query }}">
+        <input type="hidden" name="cabecalho" value="{{ cabecalho }}">
+        <input type="hidden" name="query" value="{{ query }}">
         {% if conta != 'Relatório Geral' %}
              <input type="hidden" name="conta" value="{{ conta.nome }}">
         {% else %}

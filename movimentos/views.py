@@ -1,5 +1,6 @@
 # Create your views here.
 from django.shortcuts import render, get_object_or_404
+from django.core import serializers
 from .models import MovimentosCaixa, CentrosCustos, ItensOrcamento
 from django.contrib import admin
 from django.db.models import Q
@@ -10,23 +11,88 @@ from fpdf import FPDF
 import xlsxwriter
 from django.http import HttpResponse
 from configuracoes.models import Contas
+import locale
+from decimal import Decimal
+
+class CustomPDF(FPDF):
+    def header(self):
+        # Set the font and size for the header
+        self.set_font('Arial', 'B', 12)
+        # Set the header text
+        self.cell(0, 10, 'This is the header', align='C', ln=True)
+
+    def footer(self):
+        # Set the font and size for the footer
+        self.set_font('Arial', 'I', 8)
+        # Set the footer text
+        self.cell(0, 10, 'Page %s' % self.page_no(), 0, 0, 'C')
+
+
 
 def gerar_excel(request):
-    periodo = '03' + '05'
-    content_disposition = f'attachment;filename=caixa_{periodo}.xlsx'
+  
+
+    conta = request.POST['conta'] if request.POST['conta'] != '' else 'Relatório Geral'
+    nome = conta+' mês '+request.POST['mes']+'-'+request.POST['ano']
+    content_disposition = f'attachment;filename={nome}.xlsx'
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheet.sheet')
     response['Content-Disposition'] = content_disposition
     workbook = xlsxwriter.Workbook(response, {'in_memory': True})
+    bold_format = workbook.add_format({'bold': True})
+    number_format = workbook.add_format()
+    number_format.set_num_format("#,##0.00")
+
+    number_bold = workbook.add_format({'bold': True})
+    number_bold.set_num_format("#,##0.00")
+   
+
     worksheet = workbook.add_worksheet()
+    cabecalho = eval(request.POST['cabecalho'])
     header_list = []
-    header_list.append("Projeto")
-    header_list.append("Item Orçamentário")
-    header_list.append("Entrada")
-    header_list.append("Saída")
-    header_list.append("Saldo")
+    for coluna in cabecalho:
+        header_list.append(coluna)
+
+
+    print(len(cabecalho))
+
+    data_list = eval(request.POST['query']) 
+
 
     for column, item in enumerate(header_list):
-        worksheet.write(0, column, item)
+        worksheet.write(0, column, item, bold_format)
+
+    contador = 1
+    soma = Decimal(request.POST['soma'].replace(".", "").replace(",", "."))
+    saldo = Decimal(request.POST['saldo'].replace(".", "").replace(",", "."))
+    worksheet.write(1,0,'SALDO INICIAL', bold_format)
+    worksheet.write(1,len(cabecalho)-1, soma, number_bold)
+    
+    contador += 1
+
+    for linha in data_list:
+        for k,col in enumerate(linha):
+            if k >= len(cabecalho) -3 :  
+                col = Decimal(col.replace(".", "").replace(",", ".")) if col != '' else  ''
+                print(col)
+                if k == len(cabecalho) -1:
+                    worksheet.write(contador,k,col, number_bold)
+                else:
+                    worksheet.write(contador,k,col, number_format)
+            else:    
+                worksheet.write(contador,k,col)
+        contador += 1 
+
+
+
+    worksheet.write(contador,0,'SALDO FINAL', bold_format)
+    worksheet.write(contador,len(cabecalho)-1, saldo, number_bold)
+
+    worksheet.set_column('A:A', 20)
+    worksheet.set_column('B:B', 50)
+    worksheet.set_column('C:C', 20)
+    worksheet.set_column('D:D', 20)
+    worksheet.set_column('E:E', 50)
+    worksheet.set_column('F:K', 20)
 
     workbook.close()
 
@@ -37,23 +103,39 @@ def gerar_excel(request):
 
 
 def gerar_pdf(request):
-    print('teste')
+    
+    conta = request.POST['conta'] if request.POST['conta'] != '' else 'Relatório Geral'
+    nome = conta+' mês '+request.POST['mes']+'-'+request.POST['ano']
 
-    print(request.POST['query'])
+    size_cols = [15,40,20,20,40,15,15,15,15,15]
 
-    pdf = FPDF()
+
+    pdf = CustomPDF()
+    
     pdf.add_page()
+    pdf.set_auto_page_break(auto=True)
+
     pdf.set_font('Arial', 'B', 16)
-    pdf.cell(40, 10, 'Hello World!')
+
+
+    data_list = eval(request.POST['query']) 
+
+    for linha in data_list:
+        for k,col in enumerate(linha):
+            if k == len(request.POST['cabecalho']) - 1:
+                pdf.cell(size_cols[k], 0, col, 1, 0,'C')
+            else:
+                pdf.cell(size_cols[k], 0, col, 0, 0,'C')
+
     pdf_bytes = pdf.output(dest='S').encode('latin1')
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename=tuto1.pdf'
+    response['Content-Disposition'] = 'attachment; filename={conta}.pdf'
     return response
 
 
 
 def get_movimentos_caixa_by_month_year(month, year, account='all', saldo_inicial=0):
-
+    locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
     array_final = []
     cabecalho = ['Data da Movimentação', 
                  'Histórico - descrição da movimentação',
@@ -84,14 +166,14 @@ def get_movimentos_caixa_by_month_year(month, year, account='all', saldo_inicial
     saldo = saldo_inicial
 
     for item in retorno:
-        data_lancamento = item.data_lcto
-        historico = item.historico
-        origem = item.conta_origem if item.conta_origem is not None else ''
-        destino = item.conta_destino if item.conta_destino is not None else ''
+        data_lancamento = item.data_lcto.strftime("%d/%m/%Y")
+        historico = str(item.historico)
+        origem = str(item.conta_origem) if item.conta_origem is not None else ''
+        destino = str(item.conta_destino) if item.conta_destino is not None else ''
         if item.lcto_ref is not None:
-            referencia = item.lcto_ref.descricao if item.lcto_ref.descricao else ''
-            projeto = item.lcto_ref.centro_custo if item.lcto_ref.centro_custo else '' 
-            orcamento = item.lcto_ref.item_orcamento if item.lcto_ref.item_orcamento else '' 
+            referencia = str(item.lcto_ref.descricao) if item.lcto_ref.descricao else ''
+            projeto = str(item.lcto_ref.centro_custo) if item.lcto_ref.centro_custo else '' 
+            orcamento = str(item.lcto_ref.item_orcamento) if item.lcto_ref.item_orcamento else '' 
         else:
             referencia = ''
             projeto = ''
@@ -121,6 +203,12 @@ def get_movimentos_caixa_by_month_year(month, year, account='all', saldo_inicial
                 saida = item.valor
                 entrada = ''
                 saldo -= saida
+    
+    
+        entrada = locale.format_string('%.2f', entrada, grouping=True) if entrada !=  '' else ''
+        saldo_formatado = locale.format_string('%.2f', saldo, grouping=True) if saldo !=  '' else ''
+        saida = locale.format_string('%.2f', saida, grouping=True) if saida !=  '' else ''
+
 
         linha = [data_lancamento,
                  historico,
@@ -131,7 +219,7 @@ def get_movimentos_caixa_by_month_year(month, year, account='all', saldo_inicial
                  orcamento,
                  entrada,
                  saida,
-                 saldo]
+                 saldo_formatado]
         
         array_final.append(linha)
 
@@ -211,7 +299,7 @@ def rel_fechamento_view(request):
     print(cabecalho)
     print(query)
     print(saldo)
-
+    
     my_context = {
         'mes': request.POST['mes'],
         'ano': request.POST['ano'],
@@ -219,7 +307,8 @@ def rel_fechamento_view(request):
         'soma': f"{soma:,.2f}".replace(",", ".").replace(".", ",", 1),
         'query': query,
         'saldo': saldo,
-        'cabecalho': cabecalho
+        'cabecalho': cabecalho,
+
     }
 
     context = admin.site.each_context(request)
