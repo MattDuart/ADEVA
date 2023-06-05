@@ -15,22 +15,54 @@ import locale
 from decimal import Decimal
 
 class CustomPDF(FPDF):
+    def __init__(self, cabecalho, conta, sizes, *args, **kwargs):
+        # Call the constructor of the parent class
+        super().__init__(*args, **kwargs)
+        
+        # Do something with arg1 and arg2
+        self.cabecalho = cabecalho
+        self.cabecalho[0] = 'Data'
+        self.conta = conta
+        self.size_cols =sizes
+
     def header(self):
         # Set the font and size for the header
         self.set_font('Arial', 'B', 12)
         # Set the header text
-        self.cell(0, 10, 'This is the header', align='C', ln=True)
+        self.cell(0, 8, 'ADEVA - Relatório de Caixa', align='C', ln=True)
+        self.cell(0, 8, self.conta, align='C', ln=True)
+        self.ln(2)
+        x = self.get_x()  # Get current X position
+        y = self.get_y()  # Get current Y position
+        self.line(x, y, x + 280, y)
+        self.set_font('Arial', 'B', 9)
+
+        for k,col in enumerate(self.cabecalho):
+            self.set_y(y)
+            if k == len(self.cabecalho) - 1:
+                self.set_x(x)
+                self.multi_cell(self.size_cols[k], 5, col, align='L')
+                x += self.size_cols[k]
+            else:
+                self.set_x(x)
+                self.multi_cell(self.size_cols[k], 5, col, align='L')
+                x += self.size_cols[k]
+
+        self.ln(5)    
+        x = self.get_x()  # Get current X position
+        y = self.get_y()  # Get current Y position
+        self.line(x, y, x + 280, y) 
 
     def footer(self):
         # Set the font and size for the footer
         self.set_font('Arial', 'I', 8)
         # Set the footer text
-        self.cell(0, 10, 'Page %s' % self.page_no(), 0, 0, 'C')
+        self.set_y(-15)
+        self.cell(0, 10, 'Página %s' % self.page_no(), 0, 0, 'C')
 
 
 
 def gerar_excel(request):
-  
 
     conta = request.POST['conta'] if request.POST['conta'] != '' else 'Relatório Geral'
     nome = conta+' mês '+request.POST['mes']+'-'+request.POST['ano']
@@ -41,22 +73,16 @@ def gerar_excel(request):
     bold_format = workbook.add_format({'bold': True})
     number_format = workbook.add_format()
     number_format.set_num_format("#,##0.00")
-
     number_bold = workbook.add_format({'bold': True})
     number_bold.set_num_format("#,##0.00")
-   
-
     worksheet = workbook.add_worksheet()
     cabecalho = eval(request.POST['cabecalho'])
     header_list = []
+
     for coluna in cabecalho:
         header_list.append(coluna)
 
-
-    print(len(cabecalho))
-
     data_list = eval(request.POST['query']) 
-
 
     for column, item in enumerate(header_list):
         worksheet.write(0, column, item, bold_format)
@@ -82,54 +108,64 @@ def gerar_excel(request):
                 worksheet.write(contador,k,col)
         contador += 1 
 
-
-
     worksheet.write(contador,0,'SALDO FINAL', bold_format)
     worksheet.write(contador,len(cabecalho)-1, saldo, number_bold)
-
     worksheet.set_column('A:A', 20)
     worksheet.set_column('B:B', 50)
     worksheet.set_column('C:C', 20)
     worksheet.set_column('D:D', 20)
     worksheet.set_column('E:E', 50)
     worksheet.set_column('F:K', 20)
-
     workbook.close()
 
     return response
 
 
-
-
-
 def gerar_pdf(request):
+
     
     conta = request.POST['conta'] if request.POST['conta'] != '' else 'Relatório Geral'
     nome = conta+' mês '+request.POST['mes']+'-'+request.POST['ano']
+    size_cols = [18,50,30,30,50,25,25,18,18,18]
+    contador=0
+    cabecalho = eval(request.POST['cabecalho'])
 
-    size_cols = [15,40,20,20,40,15,15,15,15,15]
-
-
-    pdf = CustomPDF()
+    pdf = CustomPDF(conta=conta, cabecalho=cabecalho, sizes=size_cols)
     
-    pdf.add_page()
+    pdf.add_page('L')
     pdf.set_auto_page_break(auto=True)
 
-    pdf.set_font('Arial', 'B', 16)
+    pdf.set_font('Arial', '', 9)
 
 
     data_list = eval(request.POST['query']) 
+    pdf.cell(30, 8, 'SALDO INICIAL', 0, 0,'L')
+    pdf.set_x(274)
+    pdf.cell(18, 8, request.POST['soma'], 0, 1,'R')
 
     for linha in data_list:
+        contador += 1
         for k,col in enumerate(linha):
-            if k == len(request.POST['cabecalho']) - 1:
-                pdf.cell(size_cols[k], 0, col, 1, 0,'C')
+            if k < len(cabecalho) - 3:
+                align = 'L'
             else:
-                pdf.cell(size_cols[k], 0, col, 0, 0,'C')
+                align = 'R'
+            
+
+            if k == len(cabecalho) - 1:
+                pdf.cell(size_cols[k], 8, col, 0, 1,align)
+            else:
+                pdf.cell(size_cols[k], 8, col, 0, 0,align)
+    
+    pdf.set_font('Arial', 'B', 9)
+    pdf.cell(30, 8, 'SALDO FINAL', 0, 0,'L')
+    pdf.set_x(274)
+    pdf.cell(18, 8, request.POST['saldo'], 0, 1,'R')
+
 
     pdf_bytes = pdf.output(dest='S').encode('latin1')
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename={conta}.pdf'
+    response['Content-Disposition'] = f'attachment; filename={conta}.pdf'
     return response
 
 
@@ -138,7 +174,7 @@ def get_movimentos_caixa_by_month_year(month, year, account='all', saldo_inicial
     locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
     array_final = []
     cabecalho = ['Data da Movimentação', 
-                 'Histórico - descrição da movimentação',
+                 'Histórico da Movimentação',
                  'Conta de Origem',
                  'Conta de Destino',
                  'Lançamento de Referência',
