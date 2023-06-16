@@ -134,6 +134,11 @@ class CentrosCustos(models.Model):
         "Nome do Projeto",
         max_length=50
     )
+
+    ativa = models.BooleanField(
+        "Ativo",
+        default=True
+    )
     class Meta:
         ordering = ('descricao',)
         verbose_name = "Projeto"
