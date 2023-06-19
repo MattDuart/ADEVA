@@ -15,6 +15,9 @@ from configuracoes.models import Contas
 from django.contrib.admin.filters import SimpleListFilter
 from django.db.models import Sum
 
+
+
+"""
 def calcula_saldo(id_conta='all', start_id=0):
     # usa star_id supondo que os movimentos são lançados em ordem de data
     # fazer por data poderia dat conflito se não forem escolhidos todos os lctos de uma data
@@ -177,7 +180,7 @@ def export_to_xlsx(modeladmin, request, queryset):
     return response
 
 
-
+"""
  
 
 
@@ -285,7 +288,7 @@ class PagarReceberAdmin(admin.ModelAdmin):
 @admin.register(MovimentosCaixa)
 class MovimentoAdmin(admin.ModelAdmin):
     form = MovimentoFormAdmin
-    actions = [export_to_xlsx]
+    #actions = [export_to_xlsx]
     list_per_page = 2000
     list_display = ("__str__",)
     list_filter = (

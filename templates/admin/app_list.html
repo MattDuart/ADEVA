@@ -39,6 +39,11 @@
              <td></td>
              <td></td>
         </tr>
+         <tr class="model-{{ model.object_name|lower }}{% if model.admin_url in request.path|urlencode %} current-model{% endif %}">
+          <th scope="row"><a href="{% url 'movimentos:download' %}"> Baixar Documentos Contábeis </a></th>
+             <td></td>
+             <td></td>
+        </tr>
         <tr class="model-{{ model.object_name|lower }}{% if model.admin_url in request.path|urlencode %} current-model{% endif %}">
           <th scope="row"><a href="{% url 'movimentos:fechamento' %}"> Relatórios </a></th>
              <td></td>

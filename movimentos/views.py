@@ -13,6 +13,9 @@ from django.http import HttpResponse
 from configuracoes.models import Contas
 import locale
 from decimal import Decimal
+import os
+import zipfile
+from django.views import View
 
 class CustomPDF(FPDF):
     def __init__(self, cabecalho, conta, sizes, *args, **kwargs):
@@ -230,6 +233,8 @@ def get_movimentos_caixa_by_month_year(month, year, account='all', saldo_inicial
             entrada = item.valor
             saida = ''
             saldo += entrada
+        elif item.tipo == 'SP' or item.tipo == 'EP': #pula transferências entre projetos
+            pass
         elif item.tipo == 'TR':
             if item.conta_destino == account:
                 entrada = item.valor
@@ -353,3 +358,43 @@ def rel_fechamento_view(request):
 
     return render(request, 'relatorio_fechamento.html', context)
 
+# testar função abaixo que gera o arquivo zip com os documentos do mês
+def view_download(request):
+    #contas = Contas.objects.all()
+    context = admin.site.each_context(request)
+    #context['contas'] = contas 
+    # Add custom context data here
+    return render(request, 'download_arquivos.html', context=context)
+
+
+def download_documentos(request):
+    mes = request.POST['mes']  # Obtém o valor do parâmetro 'mes' da URL
+    ano = request.POST['ano']  # Obtém o valor do parâmetro 'ano' da URL
+
+    # Obtém a pasta 'documentos' no diretório raiz do seu projeto Django
+    documentos_dir = os.path.join(os.getcwd(), 'documentos')
+
+    # Filtra os arquivos cujos nomes começam com {mes}_{ano}
+    arquivos_filtrados = [arquivo for arquivo in os.listdir(documentos_dir) if arquivo.startswith(f"{mes}_{ano}")]
+
+    # Cria um arquivo zip temporário para armazenar os documentos
+    temp_zip_path = os.path.join(os.getcwd(), 'temp.zip')
+
+    with zipfile.ZipFile(temp_zip_path, 'w') as zip_file:
+        # Adiciona cada arquivo filtrado ao arquivo zip
+        for arquivo in arquivos_filtrados:
+            arquivo_path = os.path.join(documentos_dir, arquivo)
+            zip_file.write(arquivo_path, os.path.basename(arquivo))
+
+    # Lê o conteúdo do arquivo zip como bytes
+    with open(temp_zip_path, 'rb') as zip_file:
+        zip_content = zip_file.read()
+
+    # Deleta o arquivo zip temporário
+    os.remove(temp_zip_path)
+
+    # Cria uma resposta HTTP para o arquivo zip
+    response = HttpResponse(zip_content, content_type='application/zip')
+    response['Content-Disposition'] = f'attachment; filename="documentos_{mes}_{ano}.zip"'
+
+    return response
