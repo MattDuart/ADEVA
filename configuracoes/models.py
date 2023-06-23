@@ -31,6 +31,9 @@ class Especie(models.Model):
     exige_arquivo = models.BooleanField("Exige salvar arquivo digital?",
         default=False
     )
+    exige_arquivo = models.BooleanField("Emite recibo?",
+        default=False
+    )
     observacoes = models.TextField(
         null=True,
         blank=True,

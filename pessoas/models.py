@@ -30,7 +30,7 @@ class Pessoa(models.Model):
         ordering = ('nome','tipo',)
     
     def __str__(self):
-        return self.nome
+        return "%s"%self.nome
 
 
 # Create your models here.
@@ -142,6 +142,37 @@ class PessoaJuridica(models.Model):
 
 
 class Endereco(models.Model):
+    UFS = [
+        ('AC', 'Acre'),
+        ('AL', 'Alagoas'),
+        ('AP', 'Amapá'),
+        ('AM', 'Amazonas'),
+        ('BA', 'Bahia'),
+        ('CE', 'Ceará'),
+        ('DF', 'Distrito Federal'),
+        ('ES', 'Espírito Santo'),
+        ('GO', 'Goiás'),
+        ('MA', 'Maranhão'),
+        ('MT', 'Mato Grosso'),
+        ('MS', 'Mato Grosso do Sul'),
+        ('MG', 'Minas Gerais'),
+        ('PA', 'Pará'),
+        ('PB', 'Paraíba'),
+        ('PR', 'Paraná'),
+        ('PE', 'Pernambuco'),
+        ('PI', 'Piauí'),
+        ('RJ', 'Rio de Janeiro'),
+        ('RN', 'Rio Grande do Norte'),
+        ('RS', 'Rio Grande do Sul'),
+        ('RO', 'Rondônia'),
+        ('RR', 'Roraima'),
+        ('SC', 'Santa Catarina'),
+        ('SP', 'São Paulo'),
+        ('SE', 'Sergipe'),
+        ('TO', 'Tocantins')
+    ]
+
+
     pessoa = models.ForeignKey(
         Pessoa,
         related_name='enderecos',
@@ -163,12 +194,14 @@ class Endereco(models.Model):
         null=True,
         blank=True
     )
-    municipio_ibge = models.IntegerField(
-        null=True,
-        blank=True
-    )
+    #municipio_ibge = models.IntegerField(
+    #    null=True,
+    #    blank=True
+    #)
     uf = models.CharField(
         max_length=2,
+        choices=UFS,
+        default='SP',
         null=True,
         blank=True
     )
@@ -252,5 +285,4 @@ class PessoaAtribuicao(models.Model):
     class Meta:
         verbose_name = "Atribuição da Pessoa"
         verbose_name_plural = "Atribuições das Pessoas"
-    def __str__(self):
-        return self.pessoa
+    

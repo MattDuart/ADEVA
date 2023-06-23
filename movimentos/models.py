@@ -80,6 +80,7 @@ class PagarReceber(models.Model):
         nro_docto = models.CharField(
               "Número do Documento",
               null=True,
+              blank=True,
               max_length=25
         )
         valor_docto = models.DecimalField(
@@ -108,7 +109,8 @@ class PagarReceber(models.Model):
             related_name='lcto_arq',
             on_delete=models.PROTECT,
             verbose_name="Arquivo de Suporte Contábil",
-            null = True
+            null = True,
+            blank = True
         )
 
         observacoes = models.TextField(
@@ -188,6 +190,15 @@ class MovimentosCaixa(models.Model):
                 null=True,
                 blank=True,
                 verbose_name="Lançamento de Referência"
+        )
+
+        arquivo_suporte = models.ForeignKey(
+            ArquivosContabeis,
+            related_name='mvto_arq',
+            on_delete=models.PROTECT,
+            verbose_name="Arquivo de Suporte Contábil",
+            null = True,
+            blank = True
         )
         class Meta:
             ordering = ('data_lcto', "id")
