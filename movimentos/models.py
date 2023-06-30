@@ -209,7 +209,54 @@ class MovimentosCaixa(models.Model):
         def __str__(self):
             return f"{self.historico} em {self.data_lcto.strftime('%d/%m/%Y')}"
         
+class RecibosMaster(models.Model):
+        data_rebibo = models.DateField('Data do Recibo', db_index=True)
+        emitido = models.BooleanField(
+              'Recibo Emitido', 
+              default=False,
+              null=True,
+              blank=True)
         
+        lancamento = models.ForeignKey(
+              PagarReceber,
+              related_name='lcto_recibo',
+              on_delete=models.CASCADE,
+              verbose_name="Lançamento de Referência",
+              null = True,
+              blank = True
+        )
+
+        class Meta:
+              ordering = ('-data_rebibo', )
+              verbose_name = "Recibo"
+              verbose_name_plural = "Recibos"
+
+        def __str__(self):
+                return f"Recibo de {self.lancamento.descricao} emitido em {self.data_rebibo.strftime('%d/%m/%Y')}"
+
+class ReciboDetalhe(models.Model):
+        recibo = models.ForeignKey(
+              RecibosMaster,
+              related_name='recibo_detalhe',
+              on_delete=models.CASCADE,
+              verbose_name="Recibo",
+              null = True,
+              blank = True
+        )
+
+        descricao = models.CharField('Descrição', max_length=150)
+        periodo = models.CharField('Período', max_length=80)
+        valor = models.DecimalField(
+              max_digits=12,
+              decimal_places=2
+        )
+        class Meta:
+              ordering = ('recibo','descricao' )
+              verbose_name = "Detalhe do Recibo"
+              verbose_name_plural = "Detalhes do Recibo"
+
+        def __str__(self):
+                return f"Recibo de {self.recibo.lancamento.descricao} emitido em {self.recibo.data_rebibo.strftime('%d/%m/%Y')}"
       
         
         

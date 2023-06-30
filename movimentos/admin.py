@@ -10,11 +10,11 @@ from django.contrib.admin.filters import DateFieldListFilter
 from django.contrib.admin.views.main import ChangeList
 
 # Register your models here.
-from .models import PagarReceber, MovimentosCaixa, ArquivosContabeis
+from .models import PagarReceber, MovimentosCaixa, ArquivosContabeis, RecibosMaster, ReciboDetalhe
 from configuracoes.models import Contas
 from django.contrib.admin.filters import SimpleListFilter
 from django.db.models import Sum
-
+from .actions import print_recibo
 
 
 """
@@ -301,3 +301,13 @@ class MovimentoAdmin(admin.ModelAdmin):
 
 #admin.site.register(MovimentosCaixa, MovimentoAdmin)
 admin.site.register(ArquivosContabeis)
+
+class ReciboInline(admin.TabularInline):
+    model = ReciboDetalhe
+    extra = 2
+
+
+@admin.register(RecibosMaster)
+class RecibosMasterAdmin(admin.ModelAdmin):
+    inlines = [ReciboInline,]
+    actions = [print_recibo]
