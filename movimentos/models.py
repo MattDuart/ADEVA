@@ -226,6 +226,11 @@ class RecibosMaster(models.Model):
               blank = True
         )
 
+        forma_pagamento = models.TextField(
+              "Forma de Pagamento",
+              null=True, 
+              blank=True)
+
         class Meta:
               ordering = ('-data_rebibo', )
               verbose_name = "Recibo"
