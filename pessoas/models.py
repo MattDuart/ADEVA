@@ -286,3 +286,86 @@ class PessoaAtribuicao(models.Model):
         verbose_name = "Atribuição da Pessoa"
         verbose_name_plural = "Atribuições das Pessoas"
     
+class DadosPgto(models.Model):
+    favorecido = models.CharField(
+        "Nome do favorecido",
+        max_length= 100
+    )
+    documento = models.CharField(
+        "CPF ou CNPJ do favorecido",
+        max_length= 20
+    )
+    numero_banco = models.IntegerField(
+        "Número do banco",
+        null=True,
+        blank=True
+    )
+    nome_banco = models.CharField(
+        "Nome do banco",
+        max_length=100,
+        null=True,
+        blank=True
+    )
+    numero_agencia = models.SmallIntegerField(
+        "Número da agência",    
+        null=True,
+        blank=True
+    )
+    digito_agencia = models.SmallIntegerField(
+        "Dígito da agência",
+        null=True,
+        blank=True
+    )
+    numero_conta = models.SmallIntegerField(
+        "Número da Conta",
+        null = True,
+        blank=True
+    )
+    digito_conta = models.SmallIntegerField(
+        "Digito da Conta",
+        null = True,
+        blank=True
+    )
+    TIPOS_PIX = [
+        ('D', 'CPF/CNPJ'),
+        ('T', 'Celular'),
+        ('E', 'Email'),
+        ('B', 'Agência e Conta'),
+        ('A', 'Chave Aleatória'),
+        
+    ]
+
+    tipo = models.CharField(
+        "Tipo da Chave Pix",
+        max_length=1,
+        choices= TIPOS_PIX,
+        default='D',
+    )
+
+    chave_pix = models.CharField(
+        "Chave Pix",
+        max_length=32,
+        null=True,
+        blank=True
+    )
+    pessoa = models.ForeignKey(
+        Pessoa,
+        models.SET_NULL,
+        related_name="pess_conta",
+        blank=True,
+        null=True,
+        verbose_name="Pessoa da conta"
+ 
+    )
+
+    observacoes = models.TextField(
+        "Notas ou comentários sobre esta conta",
+        null=True,
+        blank=True
+    )
+    class Meta:
+        ordering = ('favorecido',)
+        verbose_name = "Conta para Pagamento"
+        verbose_name_plural = "Cadastro - Contas para Pagamentos"
+    def __str__(self):
+        return self.nome

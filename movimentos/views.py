@@ -123,53 +123,53 @@ def gerar_excel(request):
 
     return response
 
+class ReciboPDF(View):
+    def gerar_pdf(self,request):
 
-def gerar_pdf(request):
+        
+        conta = request.POST['conta'] if request.POST['conta'] != '' else 'Relatório Geral'
+        nome = conta+' mês '+request.POST['mes']+'-'+request.POST['ano']
+        size_cols = [18,50,30,30,50,25,25,18,18,18]
+        contador=0
+        cabecalho = eval(request.POST['cabecalho'])
 
-    
-    conta = request.POST['conta'] if request.POST['conta'] != '' else 'Relatório Geral'
-    nome = conta+' mês '+request.POST['mes']+'-'+request.POST['ano']
-    size_cols = [18,50,30,30,50,25,25,18,18,18]
-    contador=0
-    cabecalho = eval(request.POST['cabecalho'])
+        pdf = CustomPDF(conta=conta, cabecalho=cabecalho, sizes=size_cols)
+        
+        pdf.add_page('L')
+        pdf.set_auto_page_break(auto=True)
 
-    pdf = CustomPDF(conta=conta, cabecalho=cabecalho, sizes=size_cols)
-    
-    pdf.add_page('L')
-    pdf.set_auto_page_break(auto=True)
-
-    pdf.set_font('Arial', '', 9)
-
-
-    data_list = eval(request.POST['query']) 
-    pdf.cell(30, 8, 'SALDO INICIAL', 0, 0,'L')
-    pdf.set_x(274)
-    pdf.cell(18, 8, request.POST['soma'], 0, 1,'R')
-
-    for linha in data_list:
-        contador += 1
-        for k,col in enumerate(linha):
-            if k < len(cabecalho) - 3:
-                align = 'L'
-            else:
-                align = 'R'
-            
-
-            if k == len(cabecalho) - 1:
-                pdf.cell(size_cols[k], 8, col, 0, 1,align)
-            else:
-                pdf.cell(size_cols[k], 8, col, 0, 0,align)
-    
-    pdf.set_font('Arial', 'B', 9)
-    pdf.cell(30, 8, 'SALDO FINAL', 0, 0,'L')
-    pdf.set_x(274)
-    pdf.cell(18, 8, request.POST['saldo'], 0, 1,'R')
+        pdf.set_font('Arial', '', 9)
 
 
-    pdf_bytes = pdf.output(dest='S').encode('latin1')
-    response = HttpResponse(pdf_bytes, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename={conta}.pdf'
-    return response
+        data_list = eval(request.POST['query']) 
+        pdf.cell(30, 8, 'SALDO INICIAL', 0, 0,'L')
+        pdf.set_x(274)
+        pdf.cell(18, 8, request.POST['soma'], 0, 1,'R')
+
+        for linha in data_list:
+            contador += 1
+            for k,col in enumerate(linha):
+                if k < len(cabecalho) - 3:
+                    align = 'L'
+                else:
+                    align = 'R'
+                
+
+                if k == len(cabecalho) - 1:
+                    pdf.cell(size_cols[k], 8, col, 0, 1,align)
+                else:
+                    pdf.cell(size_cols[k], 8, col, 0, 0,align)
+        
+        pdf.set_font('Arial', 'B', 9)
+        pdf.cell(30, 8, 'SALDO FINAL', 0, 0,'L')
+        pdf.set_x(274)
+        pdf.cell(18, 8, request.POST['saldo'], 0, 1,'R')
+
+
+        pdf_bytes = pdf.output(dest='S').encode('latin1')
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename={conta}.pdf'
+        return response
 
 
 

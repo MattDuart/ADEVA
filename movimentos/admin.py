@@ -284,6 +284,7 @@ class CustomDateRangeFilter(DateRangeFilter):
 class PagarReceberAdmin(admin.ModelAdmin):
     list_display = ('data_vcto', 'descricao', )
     list_filter =(FiltroPagamentos, FiltroRecebimentos )
+    readonly_fields = ['valor_pago', 'status']
 
 @admin.register(MovimentosCaixa)
 class MovimentoAdmin(admin.ModelAdmin):
@@ -311,3 +312,9 @@ class ReciboInline(admin.TabularInline):
 class RecibosMasterAdmin(admin.ModelAdmin):
     inlines = [ReciboInline,]
     actions = [print_recibo]
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if 'delete_selected' in actions:
+            del actions['delete_selected']
+        return actions

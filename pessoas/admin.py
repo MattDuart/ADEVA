@@ -43,6 +43,7 @@ admin.site.register(Pessoa, PessoaInline)
 #admin.site.register(Endereco)
 #admin.site.register(Telefone)
 admin.site.register(Atribuicao)
+admin.site.register(DadosPgto)
 #admin.site.register(PessoaAtribuicao)
 
 admin.site.site_header = 'Sistema Adeva'

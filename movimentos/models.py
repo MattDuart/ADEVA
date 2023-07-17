@@ -52,7 +52,7 @@ class PagarReceber(models.Model):
             related_name='lcto_pess',
             on_delete=models.PROTECT,
             verbose_name="Pessoa",
-            null = True
+        
         )
         data_vcto = models.DateField(
               "Data do Vencimento",
@@ -87,11 +87,19 @@ class PagarReceber(models.Model):
               max_digits=12,
               decimal_places=2
         )
+        codigo_barras = models.CharField(
+                "Código de Barras",
+                null=True,
+                blank=True,
+                max_length=100
+        )
         valor_pago = models.DecimalField(
               max_digits=12,
               decimal_places=2,
-              default=0
+              default=0,
+                          
         )
+
         STATUS_PGTO = [
               ('AB', 'Aberto'),
               ('PP', 'Parcialmente Pago'),
