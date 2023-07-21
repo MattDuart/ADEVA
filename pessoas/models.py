@@ -1,4 +1,6 @@
 from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
 
 # Create your models here.
 
@@ -287,6 +289,15 @@ class PessoaAtribuicao(models.Model):
         verbose_name_plural = "Atribuições das Pessoas"
     
 class DadosPgto(models.Model):
+    pessoa = models.ForeignKey(
+        Pessoa,
+        models.CASCADE,
+        related_name="pess_conta",
+        verbose_name="Pessoa da conta"
+ 
+    )
+
+
     favorecido = models.CharField(
         "Nome do favorecido",
         max_length= 100
@@ -339,7 +350,9 @@ class DadosPgto(models.Model):
         "Tipo da Chave Pix",
         max_length=1,
         choices= TIPOS_PIX,
-        default='D',
+        default=None,
+        null=True,
+        blank=True
     )
 
     chave_pix = models.CharField(
@@ -348,24 +361,19 @@ class DadosPgto(models.Model):
         null=True,
         blank=True
     )
-    pessoa = models.ForeignKey(
-        Pessoa,
-        models.SET_NULL,
-        related_name="pess_conta",
-        blank=True,
-        null=True,
-        verbose_name="Pessoa da conta"
- 
-    )
-
+    
     observacoes = models.TextField(
         "Notas ou comentários sobre esta conta",
         null=True,
         blank=True
     )
+    data_criacao = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação da Conta")
+    data_atualizacao = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização da Conta")
+    usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name="Usuário responsável pela criação da conta")
+    
     class Meta:
         ordering = ('favorecido',)
         verbose_name = "Conta para Pagamento"
         verbose_name_plural = "Cadastro - Contas para Pagamentos"
     def __str__(self):
-        return self.nome
+        return f'{self.pessoa.nome} - Favorecido: {self.favorecido}'

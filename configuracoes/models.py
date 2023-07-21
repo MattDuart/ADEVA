@@ -126,8 +126,8 @@ class Contas(models.Model):
     )
     class Meta:
         ordering = ('nome',)
-        verbose_name = "Conta"
-        verbose_name_plural = "Contas"
+        verbose_name = "Conta da Adeva"
+        verbose_name_plural = "Contas da Adeva"
     def __str__(self):
         return self.nome
     

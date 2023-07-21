@@ -1,7 +1,11 @@
 from django.db import models
 from configuracoes.models import *
+from pessoas.models import Pessoa, DadosPgto
 from django.contrib import admin
 from django import forms
+from django.contrib.auth.models import User
+from django.utils import timezone
+
 
 # Create your models here.
 
@@ -87,12 +91,40 @@ class PagarReceber(models.Model):
               max_digits=12,
               decimal_places=2
         )
+
+        FORMAS_PGTO = [
+              ('BL', 'BOLETO'),
+              ('TR', 'TRANSFERÊNCIA'),
+              ('ES', 'ESPÉCIE' ),
+              ('OU', 'OUTRO')
+        ]
+
+        forma_pgto = models.CharField("Forma de Pagamento",
+            max_length=2,
+            choices= FORMAS_PGTO,
+            blank=True,
+            null=True,
+            default=None,
+        )
+
+
+
         codigo_barras = models.CharField(
-                "Código de Barras",
+                "Código de Barras (se houver)",
                 null=True,
                 blank=True,
                 max_length=100
         )
+        conta_pgto = models.ForeignKey(
+              DadosPgto,
+              related_name='lcto_conta_pgto',
+              blank=True,
+              null=True,
+              on_delete=models.SET_NULL,
+
+              verbose_name="Conta para pagamento(se houver)"
+        )
+
         valor_pago = models.DecimalField(
               max_digits=12,
               decimal_places=2,
@@ -127,6 +159,10 @@ class PagarReceber(models.Model):
         help_text="Notas ou comentários sobre este lançamento"
         )
 
+        data_criacao = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação do Lançamento")
+        data_atualizacao = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização do Lançamento")
+        usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name="Usuário responsável pelo Lançamento")
+
         class Meta:
             ordering = ('data_vcto',)
             verbose_name = "Conta Pagar/Receber"
@@ -134,6 +170,30 @@ class PagarReceber(models.Model):
         def __str__(self):
             return f"{self.descricao} vencimento {self.data_vcto.strftime('%d/%m/%Y')}"
 
+
+class LctoDetalhe(models.Model):
+        lcto = models.ForeignKey(
+              PagarReceber,
+              related_name='lcto_detalhe',
+              on_delete=models.CASCADE,
+              verbose_name="Recibo",
+              null = True,
+              blank = True
+        )
+
+        descricao = models.CharField('Descrição do produto/serviço', max_length=150)
+        periodo_qtde = models.CharField('Período/Quantidade', max_length=80)
+        valor = models.DecimalField(
+              max_digits=12,
+              decimal_places=2
+        )
+        class Meta:
+              ordering = ('lcto','descricao' )
+              verbose_name = "Detalhe do Lançamento"
+              verbose_name_plural = "Detalhes do Lançamento"
+
+        def __str__(self):
+                return f"Detalhes de {self.lcto.lancamento.descricao} de {self.lcto.data_vcto.strftime('%d/%m/%Y')}"
 
 
 
@@ -207,7 +267,13 @@ class MovimentosCaixa(models.Model):
             verbose_name="Arquivo de Suporte Contábil",
             null = True,
             blank = True
+
         )
+        data_criacao = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação do Movimento")
+        data_atualizacao = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização do Movimento")
+        usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name="Usuário responsável pelo Movimento")
+
+
         class Meta:
             ordering = ('data_lcto', "id")
             verbose_name = "Movimentação de Caixa"

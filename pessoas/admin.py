@@ -36,6 +36,15 @@ class PessoaInline(admin.ModelAdmin):
     class Media:
         js = ("jquery-3.6.3.min.js","form_pessoa.js",)
 
+
+@admin.register(DadosPgto)
+class DadosPgtoAdmin(admin.ModelAdmin):
+    def save_model(self, request, obj, form, change):
+        usuario_logado = request.user
+        obj.usuario = usuario_logado
+        obj.save()
+    readonly_fields = ['data_criacao', 'data_atualizacao', 'usuario']
+
 # Register your models here.
 admin.site.register(Pessoa, PessoaInline)
 #admin.site.register(PessoaFisica)
@@ -43,7 +52,7 @@ admin.site.register(Pessoa, PessoaInline)
 #admin.site.register(Endereco)
 #admin.site.register(Telefone)
 admin.site.register(Atribuicao)
-admin.site.register(DadosPgto)
+#admin.site.register(DadosPgto)
 #admin.site.register(PessoaAtribuicao)
 
 admin.site.site_header = 'Sistema Adeva'

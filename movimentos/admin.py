@@ -10,7 +10,7 @@ from django.contrib.admin.filters import DateFieldListFilter
 from django.contrib.admin.views.main import ChangeList
 
 # Register your models here.
-from .models import PagarReceber, MovimentosCaixa, ArquivosContabeis, RecibosMaster, ReciboDetalhe
+from .models import PagarReceber, MovimentosCaixa, ArquivosContabeis, RecibosMaster, ReciboDetalhe, LctoDetalhe
 from configuracoes.models import Contas
 from django.contrib.admin.filters import SimpleListFilter
 from django.db.models import Sum
@@ -280,23 +280,41 @@ class CustomDateRangeFilter(DateRangeFilter):
 """
 
 # Register your models here.
+class LctoDetalheInline(admin.TabularInline):
+    model = LctoDetalhe
+    extra = 2
+
+
 @admin.register(PagarReceber)
 class PagarReceberAdmin(admin.ModelAdmin):
+    inlines = [LctoDetalheInline,]
+    def save_model(self, request, obj, form, change):
+        usuario_logado = request.user
+        obj.usuario = usuario_logado
+        obj.save()
+
+
     list_display = ('data_vcto', 'descricao', )
     list_filter =(FiltroPagamentos, FiltroRecebimentos )
-    readonly_fields = ['valor_pago', 'status']
+    readonly_fields = ['valor_pago', 'status', 'data_criacao', 'data_atualizacao', 'usuario']
 
 @admin.register(MovimentosCaixa)
 class MovimentoAdmin(admin.ModelAdmin):
     form = MovimentoFormAdmin
     #actions = [export_to_xlsx]
-    list_per_page = 2000
+    def save_model(self, request, obj, form, change):
+        usuario_logado = request.user
+        obj.usuario = usuario_logado
+        obj.save()
+
+    list_per_page = 200
     list_display = ("__str__",)
     list_filter = (
         ContasFilter,'data_lcto', ('data_lcto', CustomDateRangeFilter), 
     )
     def get_changelist(self, request, **kwargs):
         return MyChangeList
+    readonly_fields = ['data_criacao', 'data_atualizacao', 'usuario']
     class Media:
         js = ("jquery-3.6.3.min.js","form.js",)
 
