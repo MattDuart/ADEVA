@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from .models import *
 from pessoas.models import *
 from fpdf import FPDF
@@ -77,9 +77,8 @@ def pdf_recibo_pagamento(nome=None, itens=None, id=None):
 
 
 
-
 @admin.action(description='Imprimir Recibos')
-def print_recibo(modeladmin, request, queryset):
+def print_recibo_lcto(modeladmin, request, queryset):
     temp_dir = tempfile.mkdtemp()
     
     i = 0
@@ -87,26 +86,101 @@ def print_recibo(modeladmin, request, queryset):
     for item in queryset:
         itens = []    
 
-        todos = item.recibo_detalhe.all()
-        for t in todos:
-            itens.append((t.descricao, t.periodo, t.valor))
-        nome = item.lancamento.pessoa.nome  
-        if(item.lancamento.pessoa.tipo == 'F'):
+        todos = item.lcto_detalhe.all()
+        if len(todos) == 0:
+            itens.append((item.descricao, '', item.valor_docto))
+        else:
+            for t in todos:
+                itens.append((t.descricao, t.periodo_qtde, t.valor))
+        nome = item.pessoa.nome  
+        if(item.pessoa.tipo == 'F'):
             tipo_desc = 'NOME'
             tipo_doc = 'CPF'
-            documento = item.lancamento.pessoa.pessoasfisicas.cpf
+            documento = item.pessoa.pessoasfisicas.cpf
         else:
             tipo_desc = 'RAZÃO SOCIAL'
             tipo_doc = 'CNPJ'
-            documento = item.lancamento.pessoa.pessoasjuridicas.cnpj
-            projeto = item.lancamento.centro_custo.descricao
-        data = item.data_rebibo.strftime('%d/%m/%Y')
-        forma_pagamento = item.forma_pagamento
+            documento = item.pessoa.pessoasjuridicas.cnpj
+            projeto = item.centro_custo.descricao
+
+        
+        recibo = RecibosMaster.objects.filter(lancamento=item)
+        if len(recibo) > 0:
+            data = recibo[0].data_recibo.strftime('%d/%m/%Y')
+            numero = recibo[0].pk
+        else:
+            data = date.today()
+            novo_recibo = RecibosMaster(lancamento=item, data_recibo=data)
+            data = data.strftime('%d/%m/%Y')
+            novo_recibo.save()
+            numero = novo_recibo.pk
+
+        print(numero)
+
+        # verificar se já existe recibo
+        
+
+        f_pagamento = item.forma_pgto
+        FORMAS_PGTO = [
+              ('BL', 'BOLETO'),
+              ('TR', 'TRANSFERÊNCIA'),
+              ('ES', 'ESPÉCIE' ),
+              ('OU', 'OUTRO')
+        ]
+
+        for f in FORMAS_PGTO:
+            if f[0] == f_pagamento:
+                forma_pagamento = f[1]
+        
+        detalhes_pgto = None
+
+        if item.conta_pgto is not None:
+            if item.conta_pgto.numero_banco is not None or item.conta_pgto.nome_banco is not None:
+                banco = f'\n BANCO: {item.conta_pgto.numero_banco} - {item.conta_pgto.nome_banco}'
+            else:
+                 banco = ''
+            
+            if item.conta_pgto.documento is not None:
+                favorecido = f'\n FAVORECIDO: {item.conta_pgto.favorecido} \n CPF/CNPJ: {item.conta_pgto.documento}'
+            else:
+                favorecido = ''  
+
+            if item.conta_pgto.numero_agencia is not None:
+                dados = f'\n AGÊNCIA: {item.conta_pgto.numero_agencia} - {item.conta_pgto.digito_agencia} CONTA: {item.conta_pgto.numero_conta} - {item.conta_pgto.digito_conta}'       
+            else:
+                dados = ''
+
+            if item.conta_pgto.chave_pix is not None:
+                TIPOS_PIX = [
+                    ('D', 'CPF/CNPJ'),
+                    ('T', 'Celular'),
+                    ('E', 'Email'),
+                    ('B', 'Agência e Conta'),
+                    ('A', 'Chave Aleatória'),
+                    
+                ]
+                for j in TIPOS_PIX:
+                    if j[0] == item.conta_pgto.tipo:
+                        tipo_pix = j[1]
+                        break
+                
+                pix = f'\n CHAVE PIX: {item.conta_pgto.chave_pix} -  Tipo: {tipo_pix}'
+            
+            else:
+                pix = ''
+
+
+            detalhes_pgto = banco
+            forma_pagamento = forma_pagamento + banco + favorecido + dados + pix
 
         entradasaida = 'Entrada' 
         texto = ''
-        if entradasaida == 'Entrada':
+        if item.especie.tipo == 'O':
             texto = 'RECEBI DA ASSOCIAÇÃO DE DEFICIENTES VISUAIS E AMIGOS - ADEVA \n CNPJ: 50.599.638/0001-69'
+        else:
+            texto = 'RECEBI DE ' + item.pessoa.nome + '\n DOC. Nro: ' + documento
+            nome = 'ASSOCIAÇÃO DE DEFICIENTES VISUAIS E AMIGOS - ADEVA'
+            documento = '50.599.638/0001-69'
 
 
 
@@ -127,9 +201,12 @@ def print_recibo(modeladmin, request, queryset):
         pdf.set_xy(80, 12)
     
 
-        pdf.multi_cell(40, 20, 'RECIBO', 1, 'C', fill=False)
-        pdf.ln(15)
+        pdf.multi_cell(40, 20, 'RECIBO', 0, 'C', fill=False)
+        pdf.set_xy(140, 12)
+        pdf.cell(40, 20, 'Nro:' + str(numero), 0, 0,'C')
+        pdf.ln(25)
         pdf.set_x(10)
+        
         pdf.set_font('Arial', '', 14)
         
         pdf.cell(40, 12, tipo_desc, 1, 0,'C')
@@ -158,10 +235,14 @@ def print_recibo(modeladmin, request, queryset):
         pdf.cell(150, 12, data, 1,1, 'C')
         y = pdf.get_y()
         x = pdf.get_x()
-        pdf.multi_cell(40, 10, 'FORMA DE \n PAGAMENTO ', 0, 'C', fill=False)
+        pdf.multi_cell(40, 8, 'FORMA DE \n PAGAMENTO ', 0, 'C', fill=False)
         
         pdf.set_xy(x+40,y)
-        pdf.multi_cell(150, 8, forma_pagamento, 1, 'C')
+
+        if detalhes_pgto is None:
+            pdf.multi_cell(150, 16, forma_pagamento, 1, 'C')
+        else: 
+            pdf.multi_cell(150, 8, forma_pagamento, 1, 'C')
 
         y_fim = pdf.get_y()
 
@@ -206,7 +287,6 @@ def print_recibo(modeladmin, request, queryset):
     shutil.rmtree(temp_dir)
 
     return response
-        
 
 
 

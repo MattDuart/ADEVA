@@ -10,11 +10,11 @@ from django.contrib.admin.filters import DateFieldListFilter
 from django.contrib.admin.views.main import ChangeList
 
 # Register your models here.
-from .models import PagarReceber, MovimentosCaixa, ArquivosContabeis, RecibosMaster, ReciboDetalhe, LctoDetalhe
+from .models import PagarReceber, MovimentosCaixa, ArquivosContabeis, RecibosMaster, LctoDetalhe
 from configuracoes.models import Contas
 from django.contrib.admin.filters import SimpleListFilter
 from django.db.models import Sum
-from .actions import print_recibo
+from .actions import  print_recibo_lcto
 
 
 """
@@ -288,6 +288,7 @@ class LctoDetalheInline(admin.TabularInline):
 @admin.register(PagarReceber)
 class PagarReceberAdmin(admin.ModelAdmin):
     inlines = [LctoDetalheInline,]
+    actions = [print_recibo_lcto]
     def save_model(self, request, obj, form, change):
         usuario_logado = request.user
         obj.usuario = usuario_logado
@@ -320,19 +321,3 @@ class MovimentoAdmin(admin.ModelAdmin):
 
 #admin.site.register(MovimentosCaixa, MovimentoAdmin)
 admin.site.register(ArquivosContabeis)
-
-class ReciboInline(admin.TabularInline):
-    model = ReciboDetalhe
-    extra = 2
-
-
-@admin.register(RecibosMaster)
-class RecibosMasterAdmin(admin.ModelAdmin):
-    inlines = [ReciboInline,]
-    actions = [print_recibo]
-
-    def get_actions(self, request):
-        actions = super().get_actions(request)
-        if 'delete_selected' in actions:
-            del actions['delete_selected']
-        return actions
