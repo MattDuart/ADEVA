@@ -193,12 +193,14 @@ def get_movimentos_caixa_by_month_year(month, year, account='all', saldo_inicial
     end_date = datetime(year=year, month=month, day=last_day)
     
     # arrumar para sair entradas - saídas, e considerar (ou não) as transferencias
+    print("account")
+    print(account)
 
 
     if account == 'all':
         retorno = MovimentosCaixa.objects.filter(Q(data_lcto__gte=start_date) & Q(data_lcto__lte=end_date)).exclude(Q(tipo='TR')).order_by('data_lcto')
     else:
-        retorno = MovimentosCaixa.objects.filter(Q(data_lcto__gte=start_date) & Q(data_lcto__lte=end_date) & Q(conta_origem=account)).order_by('data_lcto')       
+        retorno = MovimentosCaixa.objects.filter(Q(data_lcto__gte=start_date) & Q(data_lcto__lte=end_date) & (Q(conta_origem=account) | Q(conta_destino=account)) ).order_by('data_lcto')       
     
 
 
@@ -281,6 +283,10 @@ def get_movimentos_caixa_sum_previous(month, year, account='all'):
         entradas = MovimentosCaixa.objects.filter(Q(data_lcto__lte=last_day_of_previous_month) & Q(tipo__in=tipos_de_entrada) ).exclude(tipo='TR').aggregate(Sum('valor'))['valor__sum']
         saidas = MovimentosCaixa.objects.filter(Q(data_lcto__lte=last_day_of_previous_month) & Q(tipo__in=tipos_de_saida)).exclude(tipo='TR').aggregate(Sum('valor'))['valor__sum']
 
+    else:
+        entradas = MovimentosCaixa.objects.filter(Q(data_lcto__lte=last_day_of_previous_month) & Q(tipo__in=tipos_de_entrada) & (Q(conta_origem=account) | Q(conta_destino=account)) ).aggregate(Sum('valor'))['valor__sum']
+        saidas = MovimentosCaixa.objects.filter(Q(data_lcto__lte=last_day_of_previous_month) & Q(tipo__in=tipos_de_saida) & (Q(conta_origem=account) | Q(conta_destino=account))).aggregate(Sum('valor'))['valor__sum']
+        
         if entradas == None:
             entradas = 0
         if saidas == None:
@@ -325,11 +331,14 @@ def rel_fechamento_view(request):
         conta_id = request.POST['conta']
         conta = get_object_or_404(Contas, id=request.POST['conta'])
     
+
+
     print('aqui')
     print(conta)
+    print(conta_id)
 
     #### só pra testar, tirar
-    conta_id = 'all'
+    #conta_id = 'all'
 
 
     soma = get_movimentos_caixa_sum_previous(int(request.POST['mes']),int(request.POST['ano']), conta_id)
