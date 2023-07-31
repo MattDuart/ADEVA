@@ -7,6 +7,7 @@ import tempfile
 import zipfile
 import shutil
 import os
+import xlsxwriter
 
 def count_files_in_temporary_folder(temp_dir):
 
@@ -296,4 +297,123 @@ def print_recibo_lcto(modeladmin, request, queryset):
 #    response['Content-Disposition'] = f'attachment; filename={conta}.pdf'
 
 
+@admin.action(description='Gerar Excel Pagamentos')
+def gerar_excel_pagamentos(modeladmin, request, queryset):
+    pagamentos = queryset.filter(especie__tipo='O').exclude(status='TP')
+
+    dataframe = []
+
+    if len(pagamentos) == 0:
+        return HttpResponse('Não há pagamentos selecionados para gerar o arquivo')
     
+    nome = 'Pagamentos_'+date.today().strftime('%d_%m_%Y')
+    content_disposition = f'attachment;filename={nome}.xlsx'
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheet.sheet')
+    response['Content-Disposition'] = content_disposition
+    workbook = xlsxwriter.Workbook(response, {'in_memory': True})
+    bold_format = workbook.add_format({'bold': True})
+    number_format = workbook.add_format()
+    number_format.set_num_format("#,##0.00")
+    number_bold = workbook.add_format({'bold': True})
+    number_bold.set_num_format("#,##0.00")
+    worksheet = workbook.add_worksheet()
+
+    cabecalho = [
+        'Data Vencimento',
+        'Descrição',
+        'Pessoa',
+        'Valor',
+        'Forma de Pagamento',
+        'Projeto',
+        'Item Orçamento',
+        'Nro Documento',
+        'Código de Barras',
+        'Favorecido',
+        'CPF/CNPJ',
+        'Número Banco',
+        'Nome Banco',
+        'Número Agência',
+        'Agência',
+        'Número Conta',
+        'Dígito Conta',
+        'Chave Pix',
+        'Tipo'
+    ]
+
+    dataframe.append(cabecalho)
+
+    for column, item in enumerate(cabecalho):
+        worksheet.write(0, column, item, bold_format)
+
+    i = 0
+    for item in pagamentos:
+        data = item.data_lcto.strftime('%d/%m/%Y')
+        descricao = item.descricao
+        pessoa = item.pessoa.nome
+        valor = item.valor_docto
+        
+        if item.forma_pgto == 'BL':
+            forma_pgto = 'BOLETO'
+        elif item.forma_pgto == 'TR':
+            forma_pgto = 'TRANSFERÊNCIA'
+        elif item.forma_pgto == 'ES':
+            forma_pgto = 'ESPÉCIE'
+        else:
+            forma_pgto = 'OUTRO'
+
+        projeto = item.centro_custo.descricao
+        item_orcamento = item.item_orcamento.descricao
+        nro_docto = item.nro_docto
+        codigo_barra = item.codigo_barras
+
+        if item.conta_pgto is not None:
+            numero_banco = item.conta_pgto.numero_banco
+            nome_banco = item.conta_pgto.nome_banco
+            numero_agencia = item.conta_pgto.numero_agencia
+            agencia = item.conta_pgto.digito_agencia
+            numero_conta = item.conta_pgto.numero_conta
+            digito_conta= item.conta_pgto.digito_conta
+            chave_pix = item.conta_pgto.chave_pix
+            tipo = item.conta_pgto.tipo
+            favorecido = item.conta_pgto.favorecido
+            documento = item.conta_pgto.documento
+
+            if tipo == 'D':
+                tipo = 'CPF/CNPJ'
+            elif tipo == 'T':
+                tipo = 'Celular'
+            elif tipo == 'E':
+                tipo = 'Email'
+            elif tipo == 'B':
+                tipo = 'Agência e Conta'
+            else:
+                tipo = 'Chave Aleatória'
+
+        else:
+            numero_banco = ''
+            nome_banco = ''
+            numero_agencia = ''
+            agencia = ''
+            numero_conta = ''
+            digito_conta= ''
+            chave_pix = ''
+            tipo = ''
+            favorecido = ''
+            documento = ''
+
+        linha = [ data, descricao, pessoa, valor, forma_pgto, projeto, item_orcamento, nro_docto, codigo_barra, favorecido, documento, numero_banco, nome_banco, numero_agencia, agencia, numero_conta, digito_conta, chave_pix, tipo]
+        dataframe.append(linha)
+        i += 1
+        for column, item in enumerate(linha):
+            if column == 3:
+                worksheet.write(i, column, item, number_format)
+            else:
+                worksheet.write(i, column, item)
+        
+    for col_num, col_data in enumerate(zip(*dataframe)):
+        max_length = max(len(str(cell)) for cell in col_data)
+        worksheet.set_column(col_num, col_num, max_length + 2) 
+
+    workbook.close()
+
+    return response
