@@ -5,7 +5,10 @@ __pycache__/
 db.sqllite3
 db.sqllite3-journal
 .vscode
-static
-media
+
+
 env
-local_settings.py
+adeva_project/local_settings.py
+adeva_project/settings.py
+adeva_project/wsgi.py
+
