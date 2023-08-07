@@ -11,4 +11,5 @@ env
 adeva_project/local_settings.py
 adeva_project/settings.py
 adeva_project/wsgi.py
-
+config_cpanel
+config_original_bkp
