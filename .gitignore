@@ -1,6 +1,7 @@
 *.log
 *.pot
 *.pyc
+*.exe
 __pycache__/
 db.sqllite3
 db.sqllite3-journal

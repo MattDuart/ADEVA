@@ -287,13 +287,13 @@ def get_movimentos_caixa_sum_previous(month, year, account='all'):
         entradas = MovimentosCaixa.objects.filter(Q(data_lcto__lte=last_day_of_previous_month) & Q(tipo__in=tipos_de_entrada) & (Q(conta_origem=account) | Q(conta_destino=account)) ).aggregate(Sum('valor'))['valor__sum']
         saidas = MovimentosCaixa.objects.filter(Q(data_lcto__lte=last_day_of_previous_month) & Q(tipo__in=tipos_de_saida) & (Q(conta_origem=account) | Q(conta_destino=account))).aggregate(Sum('valor'))['valor__sum']
         
-        if entradas == None:
-            entradas = 0
-        if saidas == None:
-            saidas = 0
+    if entradas == None:
+        entradas = 0
+    if saidas == None:
+        saidas = 0
 
 
-        retorno = entradas - saidas
+    retorno = entradas - saidas
 
     return retorno
 
