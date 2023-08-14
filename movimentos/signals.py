@@ -2,7 +2,7 @@ from django.db.models.signals import post_save,post_delete, pre_save
 #I have used django user model to use post save, post delete.
 from django.contrib.auth.models import User
 from django.dispatch import receiver
-from .models import PagarReceber, MovimentosCaixa, ArquivosContabeis
+from .models import PagarReceber, MovimentosCaixa
 
 
 

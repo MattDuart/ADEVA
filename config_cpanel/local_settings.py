@@ -2,7 +2,7 @@
 SECRET_KEY = 'ia%#0(ar!$m4&^_0tv24dr*rd!$*e7(gye0x&!fx&7yvj@l!)o'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['gia.adeva.org.br', 'www.gia.adeva.org.br']
 

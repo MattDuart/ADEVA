@@ -5,39 +5,30 @@ from django.contrib import admin
 from django import forms
 from django.contrib.auth.models import User
 from django.utils import timezone
-
+import os
 
 # Create your models here.
 
+def upload_to_lancamentos(instance, filename):
+    # Gere um novo nome de arquivo para evitar conflitos
+    mes = instance.data_vcto.strftime("%m")
+    ano = instance.data_vcto.strftime("%Y")
+    name_without_extension, extension = os.path.splitext(filename)
+    new_filename = f"{instance.id}_documento{extension}"
+    # Construa o caminho completo para upload
+    return os.path.join("lancamentos", str(ano), str(mes), new_filename)
 
-class ArquivosContabeis(models.Model):
-      data = models.DateField(
-              "Data do upload",
-              auto_now=True,
-              db_index=True
-      )      
-      descricao = models.CharField(
-           "Descrição do Arquivo",
-           max_length=50
-      )
-      TIPO_ARQUIVO = [
-           ('NF', 'Nota Fiscal'),
-           ('BL', 'Boleto'),
-           ('CP', 'Comprovante'),
-           ('EX', 'Extrato'),
-           ('RC', 'Recibo'),
-           ('OT', 'Outro')
-      ]
-      image = models.ImageField(
-           "Arquivo a ser carregado",
-           upload_to="documentos"
-      )
-      class Meta:
-            ordering = ('data',)
-            verbose_name = "Arquivo Suporte Contábil"
-            verbose_name_plural = "Arquivos de Suporte Contábil"
-      def __str__(self):
-            return self.descricao
+
+def upload_to_movimentos(instance, filename):
+    # Gere um novo nome de arquivo para evitar conflitos
+    mes = instance.data_lcto.strftime("%m")
+    ano = instance.data_lcto.strftime("%Y")
+    name_without_extension, extension = os.path.splitext(filename)
+    new_filename = f"{instance.id}_documento{extension}"
+    # Construa o caminho completo para upload
+    return os.path.join("movimentos", str(ano), str(mes), new_filename)
+
+
 
 
 
@@ -144,13 +135,12 @@ class PagarReceber(models.Model):
             choices= STATUS_PGTO,
             default='AB',
         )
-        arquivo_suporte = models.ForeignKey(
-            ArquivosContabeis,
-            related_name='lcto_arq',
-            on_delete=models.PROTECT,
-            verbose_name="Arquivo de Suporte Contábil",
-            null = True,
-            blank = True
+       
+        image = models.ImageField(
+           "Arquivo a ser carregado",
+           upload_to=upload_to_lancamentos,
+           null=True,
+           blank=True
         )
 
         observacoes = models.TextField(
@@ -261,15 +251,13 @@ class MovimentosCaixa(models.Model):
                 verbose_name="Lançamento de Referência"
         )
 
-        arquivo_suporte = models.ForeignKey(
-            ArquivosContabeis,
-            related_name='mvto_arq',
-            on_delete=models.PROTECT,
-            verbose_name="Arquivo de Suporte Contábil",
-            null = True,
-            blank = True
-
+        image = models.ImageField(
+           "Arquivo a ser carregado",
+           upload_to=upload_to_movimentos,
+           null=True,
+           blank=True
         )
+
         data_criacao = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação do Movimento")
         data_atualizacao = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização do Movimento")
         usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name="Usuário responsável pelo Movimento")
