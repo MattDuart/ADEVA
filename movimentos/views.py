@@ -377,23 +377,43 @@ def view_download(request):
 
 
 def download_documentos(request):
-    mes = request.POST['mes']  # Obtém o valor do parâmetro 'mes' da URL
-    ano = request.POST['ano']  # Obtém o valor do parâmetro 'ano' da URL
+    month = int(request.POST['mes'])  # Obtém o valor do parâmetro 'mes' da URL
+    year = int(request.POST['ano'])  # Obtém o valor do parâmetro 'ano' da URL
 
-    # Obtém a pasta 'documentos' no diretório raiz do seu projeto Django
-    documentos_dir = os.path.join(os.getcwd(), 'documentos')
+    
+    last_day = calendar.monthrange(year, month)[1]
+    start_date = datetime(year=year, month=month, day=1)
+    end_date = datetime(year=year, month=month, day=last_day)
+    
+    retorno = MovimentosCaixa.objects.filter(Q(data_lcto__gte=start_date) & Q(data_lcto__lte=end_date)).exclude(Q(tipo='TR')).order_by('data_lcto')
 
-    # Filtra os arquivos cujos nomes começam com {mes}_{ano}
-    arquivos_filtrados = [arquivo for arquivo in os.listdir(documentos_dir) if arquivo.startswith(f"{mes}_{ano}")]
+       # Obtém a pasta 'documentos' no diretório raiz do seu projeto Django
+    
 
+    arquivos_filtrados = []
+    caminho = os.path.normpath(os.path.join(os.getcwd(), 'media'))
+
+    for item in retorno:
+        # arquivos de titulos
+        if item.lcto_ref.image:
+            arquivo = os.path.normpath(os.path.join(caminho, str(item.lcto_ref.image)))
+            arquivos_filtrados.append(arquivo)
+        #arquivos de comprovantes
+        if item.image:
+            arquivo = os.path.normpath(os.path.join(caminho, str(item.image)))
+            arquivos_filtrados.append(arquivo)
+
+    print(arquivos_filtrados)
+
+    
+    
     # Cria um arquivo zip temporário para armazenar os documentos
     temp_zip_path = os.path.join(os.getcwd(), 'temp.zip')
 
     with zipfile.ZipFile(temp_zip_path, 'w') as zip_file:
         # Adiciona cada arquivo filtrado ao arquivo zip
         for arquivo in arquivos_filtrados:
-            arquivo_path = os.path.join(documentos_dir, arquivo)
-            zip_file.write(arquivo_path, os.path.basename(arquivo))
+            zip_file.write(arquivo, os.path.basename(arquivo))
 
     # Lê o conteúdo do arquivo zip como bytes
     with open(temp_zip_path, 'rb') as zip_file:
@@ -404,6 +424,7 @@ def download_documentos(request):
 
     # Cria uma resposta HTTP para o arquivo zip
     response = HttpResponse(zip_content, content_type='application/zip')
-    response['Content-Disposition'] = f'attachment; filename="documentos_{mes}_{ano}.zip"'
-
+    response['Content-Disposition'] = f'attachment; filename="documentos_{month}_{year}.zip"'
+   
     return response
+    

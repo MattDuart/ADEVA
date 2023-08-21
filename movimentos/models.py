@@ -6,6 +6,22 @@ from django import forms
 from django.contrib.auth.models import User
 from django.utils import timezone
 import os
+import unicodedata
+
+def sanitize_filename(filename):
+    # Substituir espaços por underscores
+    filename = filename.replace(' ', '_')
+    
+    # Remover acentos e caracteres especiais
+    filename = unicodedata.normalize('NFKD', filename).encode('ASCII', 'ignore').decode('utf-8')
+    
+    # Limitar o tamanho do nome do arquivo a 220 caracteres
+    filename = filename[:220]
+    
+    return filename
+
+
+
 
 # Create your models here.
 
@@ -13,8 +29,10 @@ def upload_to_lancamentos(instance, filename):
     # Gere um novo nome de arquivo para evitar conflitos
     mes = instance.data_vcto.strftime("%m")
     ano = instance.data_vcto.strftime("%Y")
+    dia = instance.data_vcto.strftime("%d")
     name_without_extension, extension = os.path.splitext(filename)
-    new_filename = f"{instance.id}_documento{extension}"
+    arquivo = sanitize_filename(dia+'_'+mes+'_'+instance.descricao)
+    new_filename = f"doc_{arquivo}_id{instance.id}{extension}"
     # Construa o caminho completo para upload
     return os.path.join("lancamentos", str(ano), str(mes), new_filename)
 
@@ -23,8 +41,11 @@ def upload_to_movimentos(instance, filename):
     # Gere um novo nome de arquivo para evitar conflitos
     mes = instance.data_lcto.strftime("%m")
     ano = instance.data_lcto.strftime("%Y")
+    dia = instance.data_lcto.strftime("%d")
     name_without_extension, extension = os.path.splitext(filename)
-    new_filename = f"{instance.id}_documento{extension}"
+    arquivo = sanitize_filename(dia+'_'+mes+'_'+instance.historico)
+    new_filename = f"compr_{arquivo}_id{instance.pk}{extension}"
+ 
     # Construa o caminho completo para upload
     return os.path.join("movimentos", str(ano), str(mes), new_filename)
 
