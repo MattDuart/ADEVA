@@ -40,8 +40,8 @@ class FiltroRecebimentos(SimpleListFilter):
     title = "Recebimentos"
     
     def lookups(self, request, model_admin):
-        return(('pgto_aberto_recente', 'Próximos Pagamentos'),
-               ('pgto_vencidos', 'Pagamentos Atrasados'))
+        return(('pgto_aberto_recente', 'Próximos Recebimentos'),
+               ('pgto_vencidos', 'Recebimentos Atrasados'))
         #return super().lookups(request, model_admin)
     
     def queryset(self, request, queryset):

@@ -315,6 +315,16 @@ def movimentos_caixa_list(request):
                     'orcamentos': orcementos
                   })
 
+def rel_detalhado(request):
+    centros_custos = CentrosCustos.objects.all()
+    orcamentos = ItensOrcamento.objects.all()
+    context = admin.site.each_context(request)
+    context['centros_custos'] = centros_custos
+    context['orcamentos'] = orcamentos 
+    # Add custom context data here
+    return render(request, 'relatorio_detalhado.html', context=context)
+
+
 
 def fechamento_view(request):
     contas = Contas.objects.all()

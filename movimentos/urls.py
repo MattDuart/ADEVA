@@ -15,7 +15,8 @@ urlpatterns = [
      path('relatorio-fechamento/', views.rel_fechamento_view, name='relatorio_fechamento'),
      path('download-arquivos/', views.download_documentos, name='download_arquivos'),
      path('gerar-pdf/', ReciboPDF.as_view(), name='gerar-pdf'),
-     path('gerar-excel/', views.gerar_excel, name='gerar-excel')
+     path('gerar-excel/', views.gerar_excel, name='gerar-excel'),
+     path('relatorio-detalhado/', views.rel_detalhado, name='relatorio_detalhado'),
      #path('test/', views.test_view, name='test'),
 ]
 
