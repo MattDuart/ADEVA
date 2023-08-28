@@ -216,9 +216,7 @@ class MovimentosCaixa(models.Model):
             ('SI', 'Saldo Inicial'),
             ('TR', 'Transferência entre contas'),
             ('PG', 'Pagamento'),
-            ('PR', 'Recebimento'),
-            ('SP', 'Projetos - Saída para outro projeto'),
-            ('EP', 'Projetos - Entrada de outro projeto')
+            ('PR', 'Recebimento'),            
         ]
         
         

@@ -3,7 +3,7 @@
 {% block content %}
     <!-- Custom content here -->
     <p>Preencha com os filtros desejados:</p>
-    <form action="{% url 'movimentos:relatorio_fechamento' %}" method="post">
+    <form action="{% url 'movimentos:relatorio_final_detalhado' %}" method="post">
     {% csrf_token %}
     <label for="mes">Mês<input type ="number" name="mes" id="mes"></label>
     <br>

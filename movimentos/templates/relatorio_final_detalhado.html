@@ -1,0 +1,92 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+
+{% block content %}
+    <link rel="stylesheet" type="text/css" href="{% static 'fechamento.css' %}" media="screen" />
+    <p><strong> Projeto: {{ centro_custo }} </strong></p>
+    <p><strong> Item Orçamentário: {{ orcamento }} </strong> </p>
+    <p><strong>Relatório de entradas e saídas por Projeto/Item Orçamentário mês: {{ mes }} ano: {{ ano }} </strong></p>
+    <p>Os lançamentos apresentados são base caixa, ou seja, os que efetivamente foram recebidos e pagos no mês selecionado.</p>
+    {% if soma != '0,00' %}
+    <p>Saldo do mês anterior (em R$): {{ soma }}</p>
+    {% else %}
+    <p> Foram selecionados todos os projetos, por isso, o saldo inicial será zerado para que apareçam apenas as entradas e saídas do mês selecionado para o item orçamentário selecionado. </p>
+    {% endif %}
+
+    <form id="botoes" name="botoes" method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="saldo" value="{{ saldo }}">
+        <input type="hidden" name="centro_custo" value="{{ centro_custo }}">
+           <input type="hidden" name="orcamento" value="{{ orcamento }}">
+        <input type="hidden" name="soma" value="{{ soma }}">
+        <input type="hidden" name="mes" value="{{ mes }}">
+        <input type="hidden" name="ano" value="{{ ano }}">
+        <input type="hidden" name="cabecalho" value="{{ cabecalho }}">
+        <input type="hidden" name="query" value="{{ query }}">
+        <input type="hidden" name="conta" value="Rel Detalhado">
+      
+        <table>
+            <tr>
+                <td>
+                    <input type="submit" id="pdf" value="Gerar Pdf"></input>
+                </td>
+                <td>
+                    <input type="submit" id="excel" value="Gerar Excel"></input>
+                </td>
+            </tr>
+            
+        
+
+        <table>
+            <tr class="destaque">
+                {% for coluna in cabecalho %}
+                <td> {{ coluna }} </td>
+                
+                {% endfor %}
+            </tr>
+            <tr class="destaque">
+                {% for i in cabecalho %}
+                    {% if forloop.first %}
+                        <td> SALDO INICIAL </td>
+                    {% elif forloop.last %}
+                        <td class='ultima_coluna'> {{ soma }} </td>
+                    {% else %}
+                        <td></td>
+                    {% endif %}
+
+                {% endfor %}
+            </tr>
+            {% for linha in query %}
+                        <tr>
+                {% for col in linha %}
+               
+                {% if forloop.last %}
+                    <td class="ultima_coluna">{{ col }}</td>
+                {% else %}
+                    <td>{{ col }}</td>
+                {% endif %}
+                {% endfor %}
+            </tr>
+            
+            {% endfor %}
+            <tr class="destaque">
+                {% for i in cabecalho %}
+                    {% if forloop.first %}
+                        <td> SALDO FINAL </td>
+                    {% elif forloop.last %}
+                        <td class='ultima_coluna'> {{ saldo }} </td>
+                    {% else %}
+                        <td></td>
+                    {% endif %}
+
+                {% endfor %}
+            </tr>
+
+            
+        </table>
+    </form>
+    <script src="{% static 'buttons.js' %}"></script>
+{% endblock %}
+
+
