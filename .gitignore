@@ -8,6 +8,8 @@ db.sqllite3-journal
 .vscode
 
 
+
+media
 env
 adeva_project/local_settings.py
 adeva_project/settings.py
