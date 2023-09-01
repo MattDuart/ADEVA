@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-15 23:40-0300\n"
+"POT-Creation-Date: 2023-08-28 12:33-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -643,6 +643,7 @@ msgid "Currently"
 msgstr ""
 
 #: .\env\Lib\site-packages\django\forms\widgets.py:441
+#: .\templates\admin\app_list.html:29
 msgid "Change"
 msgstr ""
 
@@ -1220,3 +1221,70 @@ msgstr ""
 #: .\env\Lib\site-packages\django\views\templates\default_urlconf.html:249
 msgid "Connect, get help, or contribute"
 msgstr ""
+
+#: .\templates\admin\app_list.html:9
+#, python-format
+msgid "Models in the %(name)s application"
+msgstr ""
+
+#: .\templates\admin\app_list.html:20
+msgid "Add"
+msgstr ""
+
+#: .\templates\admin\app_list.html:27
+msgid "View"
+msgstr ""
+
+#: .\templates\admin\app_list.html:57
+msgid "You don’t have permission to view or edit anything."
+msgstr ""
+
+#: .\templates\admin\auth\search_form.html:7
+msgid "Search"
+msgstr ""
+
+#: .\templates\admin\auth\search_form.html:9
+#, python-format
+msgid "%(counter)s result"
+msgid_plural "%(counter)s results"
+msgstr[0] ""
+msgstr[1] ""
+
+#: .\templates\admin\auth\search_form.html:9
+#, python-format
+msgid "%(full_result_count)s total"
+msgstr ""
+
+#: .\templates\admin\auth\search_form.html:9
+msgid "Show all"
+msgstr ""
+
+#: .\templates\admin\base.html:43
+msgid "Welcome,"
+msgstr ""
+
+#: .\templates\admin\base.html:48
+msgid "View site"
+msgstr ""
+
+#: .\templates\admin\base.html:53
+msgid "Documentation"
+msgstr ""
+
+#: .\templates\admin\base.html:57
+msgid "Change password"
+msgstr ""
+
+#: .\templates\admin\base.html:61
+msgid "Log out"
+msgstr ""
+
+#: .\templates\admin\base.html:73
+msgid "Home"
+msgstr ""
+
+#banco de dados
+msgid "Can change user"
+msgstr "Pode alterar usuário"
+
+
