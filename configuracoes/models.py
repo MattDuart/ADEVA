@@ -10,8 +10,8 @@ class Especie(models.Model):
         max_length=150
     )
     TIPOS_ESPECIES = [
-        ('D', 'Direito'),
-        ('O', 'Obrigação'),
+        ('D', 'Recebiimento'),
+        ('O', 'Pagamento'),
     ]
 
     tipo = models.CharField(

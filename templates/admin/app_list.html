@@ -33,7 +33,8 @@
             {% endif %}
           </tr>
         {% endfor %}
-        {% if app.app_label == 'movimentos' %}
+        {% if perms.movimentos.change_movimentoscaixa %}
+        {% if app.app_label == 'movimentos'  %}
          <tr class="model-{{ model.object_name|lower }}{% if model.admin_url in request.path|urlencode %} current-model{% endif %}">
           <th scope="row"><a href="{% url 'movimentos:fechamento' %}"> Fechamentos </a></th>
              <td></td>
@@ -49,6 +50,7 @@
              <td></td>
              <td></td>
         </tr>
+        {% endif %}
         {% endif %}
       </table>
     </div>

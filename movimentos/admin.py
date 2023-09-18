@@ -129,7 +129,8 @@ class PagarReceberAdmin(admin.ModelAdmin):
         obj.save()
 
     list_display = ('data_vcto', 'descricao', )
-    list_filter = (FiltroPagamentos, FiltroRecebimentos)
+    list_filter = (FiltroPagamentos, FiltroRecebimentos,
+                   'data_atualizacao')
     readonly_fields = ['valor_pago', 'status',
                        'data_criacao', 'data_atualizacao', 'usuario']
 
