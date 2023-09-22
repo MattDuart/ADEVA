@@ -525,7 +525,7 @@ def rel_fechamento_view(request):
         'conta': conta,
         'soma': soma,
         'query': query,
-        'saldo': f"{saldo:,.2f}".replace(",", ".").replace(".", ",", 1),
+        'saldo': saldo,
         'cabecalho': cabecalho,
 
     }
