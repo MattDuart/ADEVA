@@ -523,9 +523,9 @@ def rel_fechamento_view(request):
         'mes': request.POST['mes'],
         'ano': request.POST['ano'],
         'conta': conta,
-        'soma': f"{soma:,.2f}".replace(",", ".").replace(".", ",", 1),
+        'soma': soma,
         'query': query,
-        'saldo': saldo,
+        'saldo': f"{saldo:,.2f}".replace(",", ".").replace(".", ",", 1),
         'cabecalho': cabecalho,
 
     }
