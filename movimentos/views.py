@@ -523,7 +523,7 @@ def rel_fechamento_view(request):
         'mes': request.POST['mes'],
         'ano': request.POST['ano'],
         'conta': conta,
-        'soma': soma,
+        'soma': f"{soma:,.2f}".replace(",", ".").replace(".", ",", 1),
         'query': query,
         'saldo': saldo,
         'cabecalho': cabecalho,
