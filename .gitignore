@@ -16,3 +16,5 @@ adeva_project/settings.py
 adeva_project/wsgi.py
 config_cpanel
 config_original_bkp
+
+wsgi.py
