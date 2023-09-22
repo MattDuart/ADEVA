@@ -45,7 +45,7 @@ class PessoaFisica(models.Model):
         on_delete=models.CASCADE
     )
     cpf = models.CharField(
-        max_length=11,
+        max_length=20,
         unique=True,
         db_index=True
     )
@@ -112,7 +112,7 @@ class PessoaJuridica(models.Model):
         on_delete=models.CASCADE
     )
     cnpj = models.CharField(
-        max_length=14,
+        max_length=20,
         db_index=True,
         unique=True
     )
@@ -223,6 +223,7 @@ class Endereco(models.Model):
         null=True,
         blank=True
     )
+
     principal = models.BooleanField(
         null=True,
         blank=True,
@@ -346,7 +347,7 @@ class DadosPgto(models.Model):
         null=True,
         blank=True
     )
-    digito_conta = models.SmallIntegerField(
+    digito_conta = models.BigIntegerField(
         "Digito da Conta",
         null=True,
         blank=True

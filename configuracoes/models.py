@@ -100,7 +100,7 @@ class Contas(models.Model):
         null=True,
         blank=True
     )
-    numero_conta = models.SmallIntegerField(
+    numero_conta = models.BigIntegerField(
         "Número da Conta",
         null=True,
         blank=True

@@ -525,7 +525,7 @@ def rel_fechamento_view(request):
         'conta': conta,
         'soma': f"{soma:,.2f}".replace(",", ".").replace(".", ",", 1),
         'query': query,
-        'saldo': saldo,
+        'saldo': f"{saldo:,.2f}".replace(",", ".").replace(".", ",", 1),
         'cabecalho': cabecalho,
 
     }
@@ -566,7 +566,7 @@ def rel_final_detalhado(request):
         'orcamento': orcamento,
         'soma': f"{soma:,.2f}".replace(",", ".").replace(".", ",", 1),
         'query': query,
-        'saldo': saldo,
+        'saldo': f"{saldo:,.2f}".replace(",", ".").replace(".", ",", 1),
         'cabecalho': cabecalho,
 
     }
