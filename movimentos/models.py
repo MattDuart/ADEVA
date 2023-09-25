@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 import os
 import unicodedata
+from django.conf import settings
 
 
 def sanitize_filename(filename):
@@ -32,9 +33,9 @@ def upload_to_lancamentos(instance, filename):
     dia = instance.data_vcto.strftime("%d")
     name_without_extension, extension = os.path.splitext(filename)
     arquivo = sanitize_filename(dia+'_'+mes+'_'+instance.descricao)
-    new_filename = f"doc_{arquivo}_id{instance.id}{extension}"
+    new_filename = f"doc_{arquivo}_id{instance.pk}{extension}"
     # Construa o caminho completo para upload
-    return os.path.join("lancamentos", str(ano), str(mes), new_filename)
+    return os.path.join(settings.MEDIA_ROOT, "lancamentos", str(ano), str(mes), new_filename)
 
 
 def upload_to_movimentos(instance, filename):
@@ -47,7 +48,7 @@ def upload_to_movimentos(instance, filename):
     new_filename = f"compr_{arquivo}_id{instance.pk}{extension}"
 
     # Construa o caminho completo para upload
-    return os.path.join("movimentos", str(ano), str(mes), new_filename)
+    return os.path.join(settings.MEDIA_ROOT, "movimentos", str(ano), str(mes), new_filename)
 
 
 class PagarReceber(models.Model):
