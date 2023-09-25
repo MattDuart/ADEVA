@@ -523,9 +523,9 @@ def rel_fechamento_view(request):
         'mes': request.POST['mes'],
         'ano': request.POST['ano'],
         'conta': conta,
-        'soma': soma,
+        'soma': f"{soma:,.2f}".replace(",", "_").replace(".", ",", 1).replace("_", "."),
         'query': query,
-        'saldo': saldo,
+        'saldo': f"{saldo:,.2f}".replace(",", "_").replace(".", ",", 1).replace("_", "."),
         'cabecalho': cabecalho,
 
     }
@@ -564,9 +564,9 @@ def rel_final_detalhado(request):
         'ano': request.POST['ano'],
         'centro_custo': centro_custo,
         'orcamento': orcamento,
-        'soma': f"{soma:,.2f}".replace(",", ".").replace(".", ",", 1),
+        'soma': f"{soma:,.2f}".replace(",", "_").replace(".", ",", 1).replace("_", "."),
         'query': query,
-        'saldo': f"{saldo:,.2f}".replace(",", ".").replace(".", ",", 1),
+        'saldo': f"{saldo:,.2f}".replace(",", "_").replace(".", ",", 1).replace("_", "."),
         'cabecalho': cabecalho,
 
     }
