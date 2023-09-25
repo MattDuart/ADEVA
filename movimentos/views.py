@@ -601,7 +601,7 @@ def download_documentos(request):
     # Obtém a pasta 'documentos' no diretório raiz do seu projeto Django
 
     arquivos_filtrados = []
-    caminho = os.path.normpath(os.path.join(os.getcwd(), 'media'))
+    caminho = os.path.normpath(settings.MEDIA_ROOT)
 
     for item in retorno:
         # arquivos de titulos
