@@ -27,6 +27,7 @@ def sanitize_filename(filename):
 # Create your models here.
 
 def upload_to_lancamentos(instance, filename):
+    # instance.save()
     # Gere um novo nome de arquivo para evitar conflitos
     mes = instance.data_vcto.strftime("%m")
     ano = instance.data_vcto.strftime("%Y")
@@ -35,16 +36,16 @@ def upload_to_lancamentos(instance, filename):
         id = 0
     else:
         id = int(instance.pk)
-    print(id)
+
     name_without_extension, extension = os.path.splitext(filename)
     arquivo = sanitize_filename(dia+'_'+mes+'_'+instance.descricao)
     new_filename = f"doc_{arquivo}_id_{id}{extension}"
-    print(new_filename)
     # Construa o caminho completo para upload
     return os.path.join("lancamentos", str(ano), str(mes), new_filename)
 
 
 def upload_to_movimentos(instance, filename):
+    # instance.save()
     # Gere um novo nome de arquivo para evitar conflitos
     mes = instance.data_lcto.strftime("%m")
     ano = instance.data_lcto.strftime("%Y")
@@ -159,7 +160,7 @@ class PagarReceber(models.Model):
         default='AB',
     )
 
-    image = models.ImageField(
+    image = models.FileField(
         "Arquivo a ser carregado",
         upload_to=upload_to_lancamentos,
         null=True,
@@ -272,7 +273,7 @@ class MovimentosCaixa(models.Model):
         verbose_name="Lançamento de Referência"
     )
 
-    image = models.ImageField(
+    image = models.FileField(
         "Arquivo a ser carregado",
         upload_to=upload_to_movimentos,
         null=True,
