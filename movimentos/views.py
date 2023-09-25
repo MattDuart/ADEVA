@@ -18,6 +18,7 @@ import zipfile
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 
 
 class CustomPDF(FPDF):
@@ -614,7 +615,7 @@ def download_documentos(request):
             arquivos_filtrados.append(arquivo)
 
     # Cria um arquivo zip temporário para armazenar os documentos
-    temp_zip_path = os.path.join(os.getcwd(), 'temp.zip')
+    temp_zip_path = os.path.join(settings.MEDIA_ROOT, 'temp.zip')
 
     with zipfile.ZipFile(temp_zip_path, 'w') as zip_file:
         # Adiciona cada arquivo filtrado ao arquivo zip
