@@ -32,6 +32,7 @@ def upload_to_lancamentos(instance, filename):
     ano = instance.data_vcto.strftime("%Y")
     dia = instance.data_vcto.strftime("%d")
     name_without_extension, extension = os.path.splitext(filename)
+    print(instance)
     arquivo = sanitize_filename(dia+'_'+mes+'_'+instance.descricao)
     new_filename = f"doc_{arquivo}_id{instance.pk}{extension}"
     # Construa o caminho completo para upload
