@@ -36,6 +36,9 @@ def upload_to_lancamentos(instance, filename):
     arquivo = sanitize_filename(dia+'_'+mes+'_'+instance.descricao)
     new_filename = f"doc_{arquivo}_id{instance.pk}{extension}"
     # Construa o caminho completo para upload
+    print(os.path.join(settings.MEDIA_ROOT, "lancamentos",
+          str(ano), str(mes), new_filename))
+    print(instance.pk)
     return os.path.join(settings.MEDIA_ROOT, "lancamentos", str(ano), str(mes), new_filename)
 
 
