@@ -97,6 +97,7 @@ def print_recibo_lcto(modeladmin, request, queryset):
             tipo_desc = 'NOME'
             tipo_doc = 'CPF'
             documento = item.pessoa.pessoasfisicas.cpf
+            projeto = item.centro_custo.descricao
         else:
             tipo_desc = 'RAZÃO SOCIAL'
             tipo_doc = 'CNPJ'
@@ -125,7 +126,7 @@ def print_recibo_lcto(modeladmin, request, queryset):
             ('ES', 'ESPÉCIE'),
             ('OU', 'OUTRO')
         ]
-
+        forma_pagamento = ''
         for f in FORMAS_PGTO:
             if f[0] == f_pagamento:
                 forma_pagamento = f[1]
