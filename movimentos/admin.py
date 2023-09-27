@@ -14,7 +14,7 @@ from .models import PagarReceber, MovimentosCaixa, RecibosMaster, LctoDetalhe
 from configuracoes.models import Contas
 from django.contrib.admin.filters import SimpleListFilter
 from django.db.models import Sum
-from .actions import print_recibo_lcto, gerar_excel_pagamentos
+from .actions import print_recibo_lcto, gerar_excel_pagamentos, download_doc
 
 
 class FiltroPagamentos(SimpleListFilter):
@@ -121,7 +121,7 @@ class LctoDetalheInline(admin.TabularInline):
 @admin.register(PagarReceber)
 class PagarReceberAdmin(admin.ModelAdmin):
     inlines = [LctoDetalheInline,]
-    actions = [print_recibo_lcto, gerar_excel_pagamentos]
+    actions = [print_recibo_lcto, gerar_excel_pagamentos, download_doc,]
 
     def save_model(self, request, obj, form, change):
         usuario_logado = request.user
@@ -138,7 +138,7 @@ class PagarReceberAdmin(admin.ModelAdmin):
 @admin.register(MovimentosCaixa)
 class MovimentoAdmin(admin.ModelAdmin):
     form = MovimentoFormAdmin
-    # actions = [export_to_xlsx]
+    actions = [download_doc,]
 
     def save_model(self, request, obj, form, change):
         usuario_logado = request.user

@@ -46,14 +46,9 @@ class CustomPDF(FPDF):
 
         for k, col in enumerate(self.cabecalho):
             self.set_y(y)
-            if k == len(self.cabecalho) - 1:
-                self.set_x(x)
-                self.multi_cell(self.size_cols[k], 5, col, align='L')
-                x += self.size_cols[k]
-            else:
-                self.set_x(x)
-                self.multi_cell(self.size_cols[k], 5, col, align='L')
-                x += self.size_cols[k]
+            self.set_x(x)
+            self.multi_cell(self.size_cols[k], 5, col, align='L')
+            x += self.size_cols[k]
 
         self.ln(5)
         x = self.get_x()  # Get current X position
@@ -193,9 +188,17 @@ class ReciboPDF(View):
         pdf.set_x(274)
         pdf.cell(18, 8, request.POST['soma'], 0, 1, 'R')
 
+        size_cols_letters = [12, 33, 18, 18, 33, 17, 17, 12, 12, 13]
         for linha in data_list:
             contador += 1
             for k, col in enumerate(linha):
+                text = ""
+                for h, col_letter in enumerate(col):
+                    # Texto da coluna
+                    col_text = col_letter if h < size_cols_letters[k] else ""
+                    text += str(col_text)
+                col = text
+
                 if k < len(cabecalho) - 3:
                     align = 'L'
                 else:
