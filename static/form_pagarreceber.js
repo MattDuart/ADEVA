@@ -1,9 +1,8 @@
 django.jQuery(function () {
   // para iniciar sempre com pagamento
-  console.log("iniciando");
+
   django.jQuery(".field-numero_banco").hide();
   django.jQuery(".field-nome_banco").hide();
-  django.jQuery(".field-numero_agencia").hide();
   django.jQuery(".field-digito_agencia").hide();
   django.jQuery(".field-numero_conta").hide();
   django.jQuery(".field-chave_pix").hide();

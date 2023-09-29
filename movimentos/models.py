@@ -116,7 +116,7 @@ class PagarReceber(models.Model):
         ('OU', 'OUTRO')
     ]
 
-    forma_pgto = models.CharField("Forma de Pagamento",
+    forma_pgto = models.CharField("Forma de Pagamento(se houver)",
                                   max_length=2,
                                   choices=FORMAS_PGTO,
                                   blank=True,
