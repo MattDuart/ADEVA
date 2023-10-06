@@ -342,12 +342,12 @@ class DadosPgto(models.Model):
         null=True,
         blank=True
     )
-    numero_conta = models.SmallIntegerField(
+    numero_conta = models.BigIntegerField(
         "Número da Conta",
         null=True,
         blank=True
     )
-    digito_conta = models.BigIntegerField(
+    digito_conta = models.SmallIntegerField(
         "Digito da Conta",
         null=True,
         blank=True
