@@ -395,4 +395,4 @@ class DadosPgto(models.Model):
         verbose_name_plural = "Cadastro - Contas para Pagamentos"
 
     def __str__(self):
-        return f'{self.pessoa.nome} - Favorecido: {self.favorecido}'
+        return f'{self.pessoa.nome} - {self.numero_conta}-{self.nome_banco} Fav.: {self.favorecido}'

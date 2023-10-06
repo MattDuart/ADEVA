@@ -128,7 +128,7 @@ class PagarReceberAdmin(admin.ModelAdmin):
         obj.usuario = usuario_logado
         obj.save()
 
-    list_display = ('data_vcto', 'descricao', )
+    list_display = ('data_vcto',  'pessoa', 'descricao')
     list_filter = (FiltroPagamentos, FiltroRecebimentos,
                    'data_atualizacao')
     readonly_fields = ['valor_pago', 'status',
