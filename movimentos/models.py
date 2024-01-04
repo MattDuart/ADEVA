@@ -312,4 +312,4 @@ class RecibosMaster(models.Model):
         verbose_name_plural = "Recibos"
 
     def __str__(self):
-        return f"Recibo de {self.lancamento.descricao} emitido em {self.data_rebibo.strftime('%d/%m/%Y')}"
+        return f"Recibo de {self.lancamento.descricao} emitido em {self.data_recibo.strftime('%d/%m/%Y')}"
