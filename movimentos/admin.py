@@ -14,7 +14,7 @@ from .models import PagarReceber, MovimentosCaixa, RecibosMaster, LctoDetalhe
 from configuracoes.models import Contas
 from django.contrib.admin.filters import SimpleListFilter
 from django.db.models import Sum
-from .actions import print_recibo_lcto, gerar_excel_pagamentos, download_doc
+from .actions import print_recibo_lcto, gerar_excel_pagamentos, download_doc, print_selected
 
 
 class FiltroPagamentos(SimpleListFilter):
@@ -121,16 +121,16 @@ class LctoDetalheInline(admin.TabularInline):
 @admin.register(PagarReceber)
 class PagarReceberAdmin(admin.ModelAdmin):
     inlines = [LctoDetalheInline,]
-    actions = [print_recibo_lcto, gerar_excel_pagamentos, download_doc,]
+    actions = [print_recibo_lcto, gerar_excel_pagamentos, download_doc, print_selected]
 
     def save_model(self, request, obj, form, change):
         usuario_logado = request.user
         obj.usuario = usuario_logado
         obj.save()
 
-    list_display = ('data_vcto',  'pessoa', 'descricao')
-    list_filter = (FiltroPagamentos, FiltroRecebimentos,
-                   'data_atualizacao')
+    list_display = ('data_vcto',  'pessoa', 'descricao', 'especie')
+    list_filter = ('especie', FiltroPagamentos, FiltroRecebimentos,
+                   'data_atualizacao',  ('data_vcto', CustomDateRangeFilter), 'centro_custo', 'item_orcamento')
     readonly_fields = ['valor_pago', 'status',
                        'data_criacao', 'data_atualizacao', 'usuario']
 

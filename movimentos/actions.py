@@ -77,6 +77,73 @@ def pdf_recibo_pagamento(nome=None, itens=None, id=None):
     # response['Content-Disposition'] = f'attachment; filename={conta}.pdf'
 
 
+
+
+@admin.action(description='Imprimir Lista com selecionados')
+def print_selected(modeladmin, request, queryset):
+    pdf = FPDF()
+
+    pdf.add_page('L')
+
+    pdf.set_font('Arial', '', 9)
+
+    pdf.cell(20, 8, 'Data Vcto', 1, 0, 'C')
+    pdf.cell(70, 8, 'Pessoa', 1, 0, 'C')
+    pdf.cell(70, 8, 'Descrição', 1, 0, 'C')
+    pdf.cell(30, 8, 'Valor', 1, 0, 'C')
+    pdf.cell(25, 8, 'Especie', 1, 0, 'C')
+    pdf.cell(30, 8, 'Valor Pago', 1, 0, 'C')
+    pdf.cell(30, 8, 'Conta', 1, 1, 'C')
+
+    for item in queryset:
+        pdf.cell(20, 8, item.data_vcto.strftime('%d/%m/%Y'), 1, 0, 'C')
+        pdf.cell(70, 8, item.pessoa.nome[0:30], 1, 0, 'C')
+        pdf.cell(70, 8, item.descricao[0:30], 1, 0, 'C')
+        pdf.cell(30, 8, f"{item.valor_docto:,.2f}".replace(
+            ',', '#').replace('.', ',').replace('#', '.'), 1, 0, 'C')
+        pdf.cell(25, 8, item.especie.descricao[0:11], 1, 0, 'C')
+        pdf.cell(30, 8, f"{item.valor_pago:,.2f}".replace(
+            ',', '#').replace('.', ',').replace('#', '.'), 1, 0, 'C')
+        
+        if item.valor_pago == 0:
+            conta = 'EM ABERTO'
+        else:
+            conta = MovimentosCaixa.objects.filter(lcto_ref=item).first()
+            if conta is not None:
+
+                if conta.conta_origem is not None:
+                    conta = conta.conta_origem.nome[0:14]
+                else:
+                    conta = conta.conta_destino.nome[0:14]
+            
+
+        pdf.cell(30, 8, conta, 1, 1, 'C')
+
+
+    temp_dir = tempfile.mkdtemp()
+
+    pdf_file_path = f'{temp_dir}/lista.pdf'
+
+    pdf.output(pdf_file_path)
+
+    with open(pdf_file_path, 'rb') as file:
+        response = HttpResponse(file.read(), content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="lista.pdf"'
+
+    shutil.rmtree(temp_dir)
+
+    return response
+
+
+    
+
+
+
+
+
+
+
+
 @admin.action(description='Imprimir Recibos')
 def print_recibo_lcto(modeladmin, request, queryset):
     temp_dir = tempfile.mkdtemp()
