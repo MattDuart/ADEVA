@@ -10,7 +10,7 @@ from django.contrib.admin.filters import DateFieldListFilter
 from django.contrib.admin.views.main import ChangeList
 
 # Register your models here.
-from .models import PagarReceber, MovimentosCaixa, RecibosMaster, LctoDetalhe
+from .models import PagarReceber, MovimentosCaixa, RecibosMaster, LctoDetalhe, OutrosArquivosLcto
 from configuracoes.models import Contas
 from django.contrib.admin.filters import SimpleListFilter
 from django.db.models import Sum
@@ -117,10 +117,12 @@ class LctoDetalheInline(admin.TabularInline):
     model = LctoDetalhe
     extra = 2
 
-
+class OutrosArquivosInline(admin.TabularInline):
+    model = OutrosArquivosLcto
+    extra = 2
 @admin.register(PagarReceber)
 class PagarReceberAdmin(admin.ModelAdmin):
-    inlines = [LctoDetalheInline,]
+    inlines = [OutrosArquivosInline, LctoDetalheInline,]
     actions = [print_recibo_lcto, gerar_excel_pagamentos, download_doc, print_selected]
 
     def save_model(self, request, obj, form, change):

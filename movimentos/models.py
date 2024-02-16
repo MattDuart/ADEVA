@@ -8,6 +8,7 @@ from django.utils import timezone
 import os
 import unicodedata
 from django.conf import settings
+import random
 
 
 def sanitize_filename(filename):
@@ -29,16 +30,29 @@ def sanitize_filename(filename):
 def upload_to_lancamentos(instance, filename):
     # instance.save()
     # Gere um novo nome de arquivo para evitar conflitos
-    mes = instance.data_vcto.strftime("%m")
-    ano = instance.data_vcto.strftime("%Y")
-    dia = instance.data_vcto.strftime("%d")
+    if hasattr(instance, 'data_vcto'):
+        mes = instance.data_vcto.strftime("%m")
+        ano = instance.data_vcto.strftime("%Y")
+        dia = instance.data_vcto.strftime("%d")
+        descricao = instance.descricao[0:40]
+    else:
+        mes = instance.lcto.data_vcto.strftime("%m")
+        ano = instance.lcto.data_vcto.strftime("%Y")
+        dia = instance.lcto.data_vcto.strftime("%d")
+        descricao = instance.lcto.descricao[0:40]
+
     if (instance.pk is None):
         id = 0
     else:
         id = int(instance.pk)
 
+    numero_aleatorio = random.randint(0, 2**32 - 1)
+
+# Converter para hexadecimal
+    numero_hex = format(numero_aleatorio, 'x')
+
     name_without_extension, extension = os.path.splitext(filename)
-    arquivo = sanitize_filename(dia+'_'+mes+'_'+instance.descricao)
+    arquivo = sanitize_filename(dia+'_'+mes+'_'+ano+'_'+descricao+'_'+numero_hex)
     new_filename = f"doc_{arquivo}{extension}"
     # Construa o caminho completo para upload
     return os.path.join("lancamentos", str(ano), str(mes), new_filename)
@@ -50,8 +64,10 @@ def upload_to_movimentos(instance, filename):
     mes = instance.data_lcto.strftime("%m")
     ano = instance.data_lcto.strftime("%Y")
     dia = instance.data_lcto.strftime("%d")
+    
+
     name_without_extension, extension = os.path.splitext(filename)
-    arquivo = sanitize_filename(dia+'_'+mes+'_'+instance.historico)
+    arquivo = sanitize_filename(dia+'_'+mes+'_'+ano+'_'+instance.historico[0:40])
     new_filename = f"compr_{arquivo}{extension}"
 
     # Construa o caminho completo para upload
@@ -199,6 +215,7 @@ class LctoDetalhe(models.Model):
         blank=True
     )
 
+
     descricao = models.CharField(
         'Descrição do produto/serviço', max_length=150)
     periodo_qtde = models.CharField('Período/Quantidade', max_length=80)
@@ -215,6 +232,32 @@ class LctoDetalhe(models.Model):
 
     def __str__(self):
         return f"Detalhes de {self.lcto.descricao} de {self.lcto.data_vcto.strftime('%d/%m/%Y')}"
+    
+
+class OutrosArquivosLcto(models.Model):
+    lcto = models.ForeignKey(
+        PagarReceber,
+        related_name='lcto_arquivos',
+        on_delete=models.CASCADE,
+        verbose_name="Recibo",
+        null=True,
+        blank=True
+    )
+    
+    image = models.FileField(
+        "Arquivo a ser carregado",
+        upload_to=upload_to_lancamentos,
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        ordering = ('lcto',)
+        verbose_name = "Arquivo do Lançamento"
+        verbose_name_plural = "Outros Arquivos do Lançamento"
+
+    def __str__(self):
+        return f"Arquivo de {self.lcto.descricao} de {self.lcto.data_vcto.strftime('%d/%m/%Y')}"
 
 
 class MovimentosCaixa(models.Model):
