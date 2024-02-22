@@ -336,7 +336,7 @@ class MovimentosCaixa(models.Model):
         verbose_name_plural = "Movimentações de Caixa"
 
     def __str__(self):
-        return f"{self.historico} em {self.data_lcto.strftime('%d/%m/%Y')}"
+        return f"{self.historico} em {self.data_lcto.strftime('%d/%m/%Y')} - Projeto: {self.lcto_ref.centro_custo} - Item Orçamentário: {self.lcto_ref.item_orcamento}" 
 
 
 class RecibosMaster(models.Model):
