@@ -120,6 +120,17 @@ class PagarReceber(models.Model):
         blank=True,
         max_length=25
     )
+
+    tipo_documento = models.ForeignKey(
+        TiposDocumentos,
+        related_name='lcto_tipo_doc',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Tipo de Documento"
+    )
+
+
     valor_docto = models.DecimalField(
         max_digits=12,
         decimal_places=2
@@ -269,7 +280,7 @@ class MovimentosCaixa(models.Model):
     ]
 
     data_lcto = models.DateField(
-        "Data da Movimentação",
+        "Data de Pagamento",
         db_index=True
     )
 

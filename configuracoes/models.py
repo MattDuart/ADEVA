@@ -181,3 +181,32 @@ class ItensOrcamento (models.Model):
 
     def __str__(self):
         return self.descricao
+
+
+class TiposDocumentos (models.Model):
+    descricao = models.CharField(
+        "Tipo de Documento",
+        max_length=50
+    )
+
+    class Meta:
+        ordering = ('descricao',)
+        verbose_name = "Tipo Documento"
+        verbose_name_plural = "Tipos Documentos"
+
+    def __str__(self):
+        return self.descricao
+    
+class DescricoesLancamentos (models.Model):
+    descricao = models.CharField(
+        "Descrição do Lançamento",
+        max_length=50
+    )
+
+    class Meta:
+        ordering = ('descricao',)
+        verbose_name = "Descrição Lançamento"
+        verbose_name_plural = "Descrições Lançamentos"
+
+    def __str__(self):
+        return self.descricao

@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 # Register your models here.
 # Register your models here.
-from .models import Especie, Contas, CentrosCustos, ItensOrcamento
+from .models import Especie, Contas, CentrosCustos, ItensOrcamento, TiposDocumentos, DescricoesLancamentos
 
 
 class ContasFormAction(admin.ModelAdmin):
@@ -27,3 +27,5 @@ admin.site.register(Especie)
 admin.site.register(Contas, ContasFormAction)
 admin.site.register(CentrosCustos)
 admin.site.register(ItensOrcamento)
+admin.site.register(TiposDocumentos)
+admin.site.register(DescricoesLancamentos)
