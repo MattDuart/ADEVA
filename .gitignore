@@ -8,7 +8,7 @@ db.sqllite3-journal
 .vscode
 
 
-
+migrations
 media
 env
 adeva_project/local_settings.py
