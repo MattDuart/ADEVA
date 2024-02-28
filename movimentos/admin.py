@@ -130,7 +130,12 @@ class PagarReceberAdmin(admin.ModelAdmin):
         obj.usuario = usuario_logado
         obj.save()
 
-    list_display = ('data_vcto',  'pessoa', 'valor_docto', 'descricao', 'especie')
+    def campos_concatenados(self, obj):
+        return f"{obj.pessoa} {obj.valor_docto}"
+
+    campos_concatenados.short_description = 'Pessoa e Valor'
+
+    list_display = ('data_vcto',  'campos_concatenados', 'descricao', 'especie')
     list_filter = ('especie', FiltroPagamentos, FiltroRecebimentos,
                    'data_atualizacao',  ('data_vcto', CustomDateRangeFilter), 'centro_custo', 'item_orcamento')
     readonly_fields = ['valor_pago', 'status',
