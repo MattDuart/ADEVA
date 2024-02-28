@@ -131,7 +131,7 @@ class PagarReceberAdmin(admin.ModelAdmin):
         obj.save()
 
     def campos_concatenados(self, obj):
-        return f"{obj.pessoa} {obj.valor_docto}"
+        return f"{obj.pessoa} --- {obj.valor_docto}"
 
     campos_concatenados.short_description = 'Pessoa e Valor'
 
