@@ -1,12 +1,12 @@
 .column-formatar_data_vcto {
-  max-width: 15px; /* Ajuste conforme necessário */
+  width: 20px; /* Ajuste conforme necessário */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .field-formatar_data_vcto {
-  max-width: 15px; /* Ajuste conforme necessário */
+  width: 20px; /* Ajuste conforme necessário */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
