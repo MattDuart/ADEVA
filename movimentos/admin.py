@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .forms import MovimentoFormAdmin
+from django.utils.html import format_html
 import datetime
 import xlsxwriter
 from django.http import HttpResponse
@@ -132,14 +133,51 @@ class PagarReceberAdmin(admin.ModelAdmin):
 
     def campos_concatenados(self, obj):
         return f"{obj.pessoa} --- {obj.valor_docto}"
+    
+    def botao_pagar(self, obj):
+        #if self.user_has_permission:  # Substitua pela lógica de permissão
+        pago = None
+        movimento = MovimentosCaixa.objects.filter(lcto_ref=obj)
+        if movimento.count() == 0:
+            pago = 'Pagar'
+        else:
+        
+            valor = 0
+            for item in movimento:
+                valor += item.valor
+
+            if valor < obj.valor_docto:
+                pago = 'Restante'
+
+        if pago == 'Pagar':
+            return format_html('<a class="button" href="{}">Pagar</a>', f'/admin/movimentos/movimentoscaixa/add/?lcto_ref={obj.pk}')
+        elif pago == 'Restante':
+            return format_html('<a class="button" href="{}">Pagar restante</a>', f'/admin/movimentos/movimentoscaixa/add/?lcto_ref={obj.pk}')
+        else:
+            return 'Pago'
+    
+    
+    def formatar_data_vcto(self, obj):
+        return obj.data_vcto.strftime('%d/%m/%Y')
+    
+    formatar_data_vcto.short_description = 'Data Vcto'
+
 
     campos_concatenados.short_description = 'Pessoa e Valor'
+    botao_pagar.short_description = 'Pagar'
 
-    list_display = ('data_vcto',  'campos_concatenados', 'descricao', 'especie')
+    list_display = ('formatar_data_vcto',  'campos_concatenados', 'botao_pagar','descricao', 'especie')
     list_filter = ('especie', FiltroPagamentos, FiltroRecebimentos,
                    'data_atualizacao',  ('data_vcto', CustomDateRangeFilter), 'centro_custo', 'item_orcamento')
     readonly_fields = ['valor_pago', 'status',
                        'data_criacao', 'data_atualizacao', 'usuario']
+    
+
+    class Media:
+        css = {
+            'all': ('movimentos.css',)
+        }
+
 
 
 @admin.register(MovimentosCaixa)

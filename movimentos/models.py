@@ -272,6 +272,16 @@ class OutrosArquivosLcto(models.Model):
 
 
 class MovimentosCaixa(models.Model):
+    lcto_ref = models.ForeignKey(
+        PagarReceber,
+        models.SET_NULL,
+        related_name='mov_lcto',
+        null=True,
+        blank=True,
+        verbose_name="Lançamento de Referência"
+    )
+
+
     TIPOS_MOVIMENTOS_CAIXA = [
         ('SI', 'Saldo Inicial'),
         ('TR', 'Transferência entre contas'),
@@ -318,14 +328,7 @@ class MovimentosCaixa(models.Model):
         verbose_name="Conta de Destino",
         default=None
     )
-    lcto_ref = models.ForeignKey(
-        PagarReceber,
-        models.SET_NULL,
-        related_name='mov_lcto',
-        null=True,
-        blank=True,
-        verbose_name="Lançamento de Referência"
-    )
+
 
     image = models.FileField(
         "Arquivo a ser carregado",
@@ -347,7 +350,7 @@ class MovimentosCaixa(models.Model):
         verbose_name_plural = "Movimentações de Caixa"
 
     def __str__(self):
-        return f"{self.historico} em {self.data_lcto.strftime('%d/%m/%Y')} - Projeto: {self.lcto_ref.centro_custo} - Item Orçamentário: {self.lcto_ref.item_orcamento}" 
+        return f"{self.historico} em {self.data_lcto.strftime('%d/%m/%Y')} - Valor Pgto : {self.valor} / Valor Lcto : {self.lcto_ref.valor_docto} - Projeto: {self.lcto_ref.centro_custo} - Item Orçamentário: {self.lcto_ref.item_orcamento}" 
 
 
 class RecibosMaster(models.Model):
