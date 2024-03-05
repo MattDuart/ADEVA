@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
   var inlineGroup = document.querySelector("#lcto_detalhe-group");
 
   // Localiza o elemento field-especie
-  var fieldEspecie = document.querySelector(".form-row.field-especie");
+  var fieldEspecie = document.querySelector(".form-row.field-item_orcamento");
 
   // Move o inline-group para depois do field-especie
   if (fieldEspecie && inlineGroup) {
