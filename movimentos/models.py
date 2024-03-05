@@ -133,7 +133,8 @@ class PagarReceber(models.Model):
 
     valor_docto = models.DecimalField(
         max_digits=12,
-        decimal_places=2
+        decimal_places=2,
+        default=0
     )
 
     FORMAS_PGTO = [
@@ -236,10 +237,27 @@ class LctoDetalhe(models.Model):
         decimal_places=2
     )
 
+    centro_custo = models.ForeignKey(
+        CentrosCustos,
+        related_name='lcto_det_cc',
+        on_delete=models.SET_NULL,
+        verbose_name="Projeto",
+        blank=True,
+        null=True
+    )
+    item_orcamento = models.ForeignKey(
+        ItensOrcamento,
+        related_name='lcto_det_orc',
+        on_delete=models.SET_NULL,
+        verbose_name="Item Orçamentário",
+        blank=True,
+        null=True
+    )
+
     class Meta:
         ordering = ('lcto', 'descricao')
-        verbose_name = "Detalhe do Lançamento"
-        verbose_name_plural = "Detalhes do Lançamento"
+        verbose_name = "Item do Lançamento"
+        verbose_name_plural = "Itens do Lançamento"
 
     def __str__(self):
         return f"Detalhes de {self.lcto.descricao} de {self.lcto.data_vcto.strftime('%d/%m/%Y')}"
@@ -272,14 +290,7 @@ class OutrosArquivosLcto(models.Model):
 
 
 class MovimentosCaixa(models.Model):
-    lcto_ref = models.ForeignKey(
-        PagarReceber,
-        models.SET_NULL,
-        related_name='mov_lcto',
-        null=True,
-        blank=True,
-        verbose_name="Lançamento de Referência"
-    )
+
 
 
     TIPOS_MOVIMENTOS_CAIXA = [
@@ -288,6 +299,22 @@ class MovimentosCaixa(models.Model):
         ('PG', 'Pagamento'),
         ('PR', 'Recebimento'),
     ]
+
+    tipo = models.CharField(
+        "Tipo de movimento",
+        max_length=2,
+        choices=TIPOS_MOVIMENTOS_CAIXA,
+        default='PG',
+    )
+
+    lcto_ref = models.ForeignKey(
+        PagarReceber,
+        models.SET_NULL,
+        related_name='mov_lcto',
+        null=True,
+        blank=True,
+        verbose_name="Lançamento de Referência"
+    )
 
     data_lcto = models.DateField(
         "Data de Pagamento",
@@ -300,12 +327,7 @@ class MovimentosCaixa(models.Model):
         decimal_places=2
     )
 
-    tipo = models.CharField(
-        "Tipo de movimento",
-        max_length=2,
-        choices=TIPOS_MOVIMENTOS_CAIXA,
-        default='PG',
-    )
+  
     historico = models.CharField(
         "Histórico - descrição da movimentação",
         max_length=150

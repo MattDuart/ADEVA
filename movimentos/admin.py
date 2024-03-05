@@ -3,20 +3,20 @@ from .forms import MovimentoFormAdmin
 from django.utils.html import format_html
 import datetime
 import xlsxwriter
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
 from django.db import models
 from rangefilter.filters import DateRangeFilter, DateTimeRangeFilter, NumericRangeFilter
 from django.db.models import Q
 from django.contrib.admin.filters import DateFieldListFilter
 from django.contrib.admin.views.main import ChangeList
-
+from django.forms.models import BaseInlineFormSet
 # Register your models here.
 from .models import PagarReceber, MovimentosCaixa, RecibosMaster, LctoDetalhe, OutrosArquivosLcto
 from configuracoes.models import Contas
 from django.contrib.admin.filters import SimpleListFilter
 from django.db.models import Sum
 from .actions import print_recibo_lcto, gerar_excel_pagamentos, download_doc, print_selected
-
+from django.core.exceptions import ValidationError
 
 class FiltroPagamentos(SimpleListFilter):
     parameter_name = "Pagamentos"
@@ -112,11 +112,29 @@ class CustomDateRangeFilter(DateRangeFilter):
 """
 
 # Register your models here.
+class LctoDetalheFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        soma = 0
+        tem_item = False
 
+        for form in self.forms:
+            if not form.is_valid():
+                return  # Se um dos formulários não for válido, não continue
+
+            if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                tem_item = True
+                soma += form.cleaned_data.get('valor', 0)
+
+        if not tem_item:
+            raise ValidationError("Pelo menos um LctoDetalhe deve ser preenchido.")
+        if soma == 0:
+            raise ValidationError("A soma dos valores dos LctoDetalhe não pode ser zero.")
 
 class LctoDetalheInline(admin.TabularInline):
     model = LctoDetalhe
     extra = 2
+    formset = LctoDetalheFormSet
 
 class OutrosArquivosInline(admin.TabularInline):
     model = OutrosArquivosLcto
@@ -125,6 +143,40 @@ class OutrosArquivosInline(admin.TabularInline):
 class PagarReceberAdmin(admin.ModelAdmin):
     inlines = [OutrosArquivosInline, LctoDetalheInline,]
     actions = [print_recibo_lcto, gerar_excel_pagamentos, download_doc, print_selected]
+
+    def save_model(self, request, obj, form, change):
+        # Marque o objeto como não salvo
+        obj._pre_save_instance = obj
+        # Não chame o save ainda
+
+
+    def save_formset(self, request, form, formset, change):
+        if formset.model == LctoDetalhe:
+            instances = formset.save(commit=False)
+
+            if not instances:
+                formset._non_form_errors = formset.error_class(["Pelo menos um LctoDetalhe deve ser preenchido."])
+                return  # Interrompe o salvamento dos dados
+
+            soma = sum(instance.valor for instance in instances if instance.valor)
+            if soma == 0:
+                formset._non_form_errors = formset.error_class(["A soma dos valores dos LctoDetalhe não pode ser zero."])
+                return  # Interrompe o salvamento dos dados
+
+            # Verifique se a instância PagarReceber já foi salva
+            pagar_receber_instance = form.instance
+            if pagar_receber_instance:
+                pagar_receber_instance.valor_docto = soma
+                # Salvando a instância PagarReceber
+                pagar_receber_instance.save()
+
+            # Salvando cada instância de LctoDetalhe
+            for instance in instances:
+                instance.lcto_id = pagar_receber_instance.id
+                instance.save()
+        else:
+            super().save_formset(request, form, formset, change)
+  
 
     def save_model(self, request, obj, form, change):
         usuario_logado = request.user
@@ -148,13 +200,13 @@ class PagarReceberAdmin(admin.ModelAdmin):
 
             if valor < obj.valor_docto:
                 pago = 'Restante'
-
+#### colocar permissão
         if pago == 'Pagar':
-            return format_html('<a class="button" href="{}">Pagar</a>', f'/admin/movimentos/movimentoscaixa/add/?lcto_ref={obj.pk}')
+            return format_html('<a class="button" href="{}">Quitar</a>', f'/admin/movimentos/movimentoscaixa/add/?lcto_ref={obj.pk}')
         elif pago == 'Restante':
-            return format_html('<a class="button" href="{}">Pagar restante</a>', f'/admin/movimentos/movimentoscaixa/add/?lcto_ref={obj.pk}')
+            return format_html('<a class="button" href="{}">Quitar restante</a>', f'/admin/movimentos/movimentoscaixa/add/?lcto_ref={obj.pk}')
         else:
-            return 'Pago'
+            return 'Quitado'
     
     
     def formatar_data_vcto(self, obj):
@@ -164,12 +216,12 @@ class PagarReceberAdmin(admin.ModelAdmin):
 
 
     campos_concatenados.short_description = 'Pessoa e Valor'
-    botao_pagar.short_description = 'Pagar'
+    botao_pagar.short_description = 'Quitar'
 
     list_display = ('formatar_data_vcto',  'campos_concatenados', 'botao_pagar','descricao', 'especie')
     list_filter = ('especie', FiltroPagamentos, FiltroRecebimentos,
                    'data_atualizacao',  ('data_vcto', CustomDateRangeFilter), 'centro_custo', 'item_orcamento')
-    readonly_fields = ['valor_pago', 'status',
+    readonly_fields = ['valor_docto', 'valor_pago', 'status',
                        'data_criacao', 'data_atualizacao', 'usuario']
     
 
@@ -177,6 +229,7 @@ class PagarReceberAdmin(admin.ModelAdmin):
         css = {
             'all': ('movimentos.css',)
         }
+        js = ("form_pagar_receber.js",)
 
 
 
@@ -189,6 +242,28 @@ class MovimentoAdmin(admin.ModelAdmin):
         usuario_logado = request.user
         obj.usuario = usuario_logado
         obj.save()
+
+    def get_changeform_initial_data(self, request: HttpRequest):
+        initial = super().get_changeform_initial_data(request)
+        lcto_ref = request.GET.get('lcto_ref')
+        if lcto_ref:
+            lcto = PagarReceber.objects.get(pk=lcto_ref)
+            historico = lcto.descricao
+            if lcto.especie.tipo == 'D':
+                historico = f"Recebimento de {historico}"
+                initial['tipo'] = 'PR'
+            elif lcto.especie.tipo == 'O':
+                historico = f"Pagamento de {historico}"
+                initial['tipo'] = 'PG'
+            else:
+                historico = f"Transferência de {historico}"
+                initial['tipo'] = 'TR'
+           
+
+            initial['valor'] = lcto.valor_docto - lcto.valor_pago  # 'campo_relacionado' deve ser substituído pelo nome real do campo
+            initial['historico'] = historico
+            initial['data_lcto'] = datetime.date.today().strftime('%d/%m/%Y')
+        return initial
 
     list_per_page = 200
     list_display = ("__str__",)
