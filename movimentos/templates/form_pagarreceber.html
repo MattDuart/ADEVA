@@ -2,5 +2,7 @@
 
 {% block submit_buttons_bottom %}
     {{ block.super }}
+    {% if perms.movimentos.change_movimentoscaixa %}
     <input type="submit" name="_salvar_e_quitar" value="Salvar e Quitar" class="default">
+    {% endif %}
 {% endblock %}

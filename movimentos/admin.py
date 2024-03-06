@@ -1,4 +1,5 @@
 from django.contrib import admin
+import re
 from .forms import MovimentoFormAdmin
 from django.utils.html import format_html
 import datetime
@@ -142,29 +143,6 @@ class OutrosArquivosInline(admin.TabularInline):
     extra = 2
 
 
-
-class ConcatenatedFieldFilter(admin.SimpleListFilter):
-    title = _('Pessoa e Descrição')  # Título que aparecerá na interface do admin
-    parameter_name = 'concatenated_search'  # Nome do parâmetro GET na URL
-
-    def lookups(self, request, model_admin):
-        # Não estamos usando opções predefinidas de filtro
-        return []
-
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(
-                Q(pessoa__nome__icontains=self.value()) | Q(descricao__icontains=self.value()) | Q(nro_docto__icontains=self.value())
-            )
-        return queryset
-
-    def has_output(self):
-        return True
-
-    def value(self):
-        value = super().value()
-        return '' if value is None else value
-
 @admin.register(PagarReceber)
 class PagarReceberAdmin(admin.ModelAdmin):
     inlines = [OutrosArquivosInline, LctoDetalheInline,]
@@ -172,7 +150,7 @@ class PagarReceberAdmin(admin.ModelAdmin):
 
     change_form_template = 'form_pagarreceber.html'
     add_form_template = 'form_pagarreceber.html'
-    change_list_template = 'list_pagarreceber.html'
+
 
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
@@ -267,12 +245,47 @@ class PagarReceberAdmin(admin.ModelAdmin):
     campos_concatenados.short_description = 'Pessoa e Valor'
     botao_pagar.short_description = 'Quitar'
 
-    list_display = ('formatar_data_vcto',  'campos_concatenados', 'botao_pagar','descricao', 'nro_docto', 'especie')
-    list_filter = (ConcatenatedFieldFilter, 'especie', FiltroPagamentos, FiltroRecebimentos,
+    
+
+
+    list_display = ('formatar_data_vcto',  'campos_concatenados', 'descricao', 'nro_docto', 'especie')
+
+    def get_list_display(self, request):
+        list_display = super().get_list_display(request)
+        # Verifique se o usuário tem a permissão desejada
+        if request.user.has_perm('movimentos.change_movimentoscaixa'):
+            # Adicione um campo extra na terceira posição
+            list_display = list(list_display)  # Converta para lista, se ainda não for
+            list_display.insert(2, 'botao_pagar')
+        return list_display
+
+
+
+    list_filter = ('especie', FiltroPagamentos, FiltroRecebimentos,
                    'data_atualizacao',  ('data_vcto', CustomDateRangeFilter), 'centro_custo', 'item_orcamento')
+    search_fields = ('pessoa__nome', 'descricao', 'nro_docto', 'data_vcto', 'valor_docto')
     readonly_fields = ['valor_docto', 'valor_pago', 'status',
                        'data_criacao', 'data_atualizacao', 'usuario']
     
+    def get_search_results(self, request, queryset, search_term):
+        data_pattern = re.compile(r'(\d{2})/(\d{2})/(\d{4}|\d{2})')
+        search_term = re.sub(data_pattern, self.format_date, search_term)
+        # Substitui valores numéricos
+        valor_pattern = re.compile(r'(\d{1,3}(?:\.\d{3})*),(\d{2})')
+        search_term = re.sub(valor_pattern, lambda x: f"{x.group(1).replace('.', '')}.{x.group(2)}", search_term)
+
+        print(search_term)
+
+        # Executa a busca com o termo de busca modificado
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+
+        return queryset, use_distinct
+
+    def format_date(self, match):
+        dia, mes, ano = match.groups()
+        # Ajusta anos no formato DD/MM/AA para DD/MM/AAAA
+        ano = '20' + ano if len(ano) == 2 else ano
+        return f"{ano}-{mes}-{dia}"
 
     class Media:
         css = {
@@ -302,7 +315,7 @@ class MovimentoAdmin(admin.ModelAdmin):
         lcto_ref = request.GET.get('lcto_ref')
         if lcto_ref:
             lcto = PagarReceber.objects.get(pk=lcto_ref)
-            historico = lcto.descricao
+            historico = lcto.descricao  + ' - ' + lcto.nro_docto + ' - ' + lcto.data_vcto.strftime('%d/%m/%Y') + ' - ' + str(lcto.valor_docto) + ' - ' + lcto.pessoa.nome [0:300]
             if lcto.especie.tipo == 'D':
                 historico = f"Recebimento de {historico}"
                 initial['tipo'] = 'PR'

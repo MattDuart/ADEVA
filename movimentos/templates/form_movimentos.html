@@ -2,8 +2,9 @@
 
 {% block submit_buttons_bottom %}
     {% if 'origem' in request.GET %}
-        <!-- Seu botão personalizado -->
+        {% if perms.movimentos.change_movimentoscaixa %}
         <input type="submit" value="Quitar" name="_quitar" />
+        {% endif %}
     {% else %}
         <!-- Botões padrões -->
         {{ block.super }}

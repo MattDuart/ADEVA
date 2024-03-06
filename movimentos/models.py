@@ -330,7 +330,7 @@ class MovimentosCaixa(models.Model):
   
     historico = models.CharField(
         "Histórico - descrição da movimentação",
-        max_length=150
+        max_length=300
     )
     conta_origem = models.ForeignKey(
         Contas,
