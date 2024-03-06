@@ -1,0 +1,20 @@
+{% extends 'admin/change_list.html' %}
+
+{% block search %} 
+<div>
+    <form method="GET">
+        <label for="concatenated_search">Pesquisa por Descrição, Pessoa ou Número do documento </label>
+        <input type="text" name="concatenated_search" value="{{ cl.params.concatenated_search }}">
+        <button class="button" type="submit">Buscar</button>
+
+        <!-- Mantenha os outros parâmetros de filtro -->
+     {% for param, value in extra_query_params.items %}
+            <input type="hidden" name="{{ param }}" value="{{ value }}">
+        {% endfor %}
+
+
+        
+    </form>
+</div>
+{{ block.super }}
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "admin/change_form.html" %}
+
+{% block submit_buttons_bottom %}
+    {% if 'origem' in request.GET %}
+        <!-- Seu botão personalizado -->
+        <input type="submit" value="Quitar" name="_quitar" />
+    {% else %}
+        <!-- Botões padrões -->
+        {{ block.super }}
+    {% endif %}
+{% endblock %}

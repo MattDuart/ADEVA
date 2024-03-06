@@ -3,7 +3,7 @@ from .forms import MovimentoFormAdmin
 from django.utils.html import format_html
 import datetime
 import xlsxwriter
-from django.http import HttpResponse, HttpRequest
+from django.http import HttpResponse, HttpRequest, HttpResponseRedirect
 from django.db import models
 from rangefilter.filters import DateRangeFilter, DateTimeRangeFilter, NumericRangeFilter
 from django.db.models import Q
@@ -17,7 +17,8 @@ from django.contrib.admin.filters import SimpleListFilter
 from django.db.models import Sum
 from .actions import print_recibo_lcto, gerar_excel_pagamentos, download_doc, print_selected
 from django.core.exceptions import ValidationError
-
+from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 class FiltroPagamentos(SimpleListFilter):
     parameter_name = "Pagamentos"
     title = "Pagamentos"
@@ -139,15 +140,46 @@ class LctoDetalheInline(admin.TabularInline):
 class OutrosArquivosInline(admin.TabularInline):
     model = OutrosArquivosLcto
     extra = 2
+
+
+
+class ConcatenatedFieldFilter(admin.SimpleListFilter):
+    title = _('Pessoa e Descrição')  # Título que aparecerá na interface do admin
+    parameter_name = 'concatenated_search'  # Nome do parâmetro GET na URL
+
+    def lookups(self, request, model_admin):
+        # Não estamos usando opções predefinidas de filtro
+        return []
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(
+                Q(pessoa__nome__icontains=self.value()) | Q(descricao__icontains=self.value()) | Q(nro_docto__icontains=self.value())
+            )
+        return queryset
+
+    def has_output(self):
+        return True
+
+    def value(self):
+        value = super().value()
+        return '' if value is None else value
+
 @admin.register(PagarReceber)
 class PagarReceberAdmin(admin.ModelAdmin):
     inlines = [OutrosArquivosInline, LctoDetalheInline,]
     actions = [print_recibo_lcto, gerar_excel_pagamentos, download_doc, print_selected]
 
-    def save_model(self, request, obj, form, change):
-        # Marque o objeto como não salvo
-        obj._pre_save_instance = obj
-        # Não chame o save ainda
+    change_form_template = 'form_pagarreceber.html'
+    add_form_template = 'form_pagarreceber.html'
+    change_list_template = 'list_pagarreceber.html'
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        # Adiciona os parâmetros GET, exceto 'meu_campo_de_input', ao contexto
+        extra_query_params = {k: v for k, v in request.GET.items() if k != 'concatenated_search'}
+        extra_context['extra_query_params'] = extra_query_params
+        return super().changelist_view(request, extra_context=extra_context)
 
 
     def save_formset(self, request, form, formset, change):
@@ -183,6 +215,23 @@ class PagarReceberAdmin(admin.ModelAdmin):
         obj.usuario = usuario_logado
         obj.save()
 
+
+    def response_change(self, request, obj):
+        response = super().response_change(request, obj)
+        if "_salvar_e_quitar" in request.POST:
+            # Lógica para "Salvar e Quitar" na edição
+            redirect_url = f'/admin/movimentos/movimentoscaixa/add/?lcto_ref={obj.pk}&origem=pagar_receber'
+            return HttpResponseRedirect(redirect_url)
+        return response
+
+    def response_add(self, request, obj, post_url_continue=None):
+        response = super().response_add(request, obj, post_url_continue)
+        if "_salvar_e_quitar" in request.POST:
+            # Lógica para "Salvar e Quitar" na adição
+            redirect_url = f'/admin/movimentos/movimentoscaixa/add/?lcto_ref={obj.pk}&origem=pagar_receber'
+            return HttpResponseRedirect(redirect_url)
+        return response
+
     def campos_concatenados(self, obj):
         return f"{obj.pessoa} --- {obj.valor_docto}"
     
@@ -202,11 +251,11 @@ class PagarReceberAdmin(admin.ModelAdmin):
                 pago = 'Restante'
 #### colocar permissão
         if pago == 'Pagar':
-            return format_html('<a class="button" href="{}">Quitar</a>', f'/admin/movimentos/movimentoscaixa/add/?lcto_ref={obj.pk}')
+            return format_html('<a class="button" href="{}">Quitar</a>', f'/admin/movimentos/movimentoscaixa/add/?lcto_ref={obj.pk}&origem=pagar_receber')
         elif pago == 'Restante':
-            return format_html('<a class="button" href="{}">Quitar restante</a>', f'/admin/movimentos/movimentoscaixa/add/?lcto_ref={obj.pk}')
+            return format_html('<a class="button" href="{}">Quitar restante</a>', f'/admin/movimentos/movimentoscaixa/add/?lcto_ref={obj.pk}&origem=pagar_receber')
         else:
-            return 'Quitado'
+            return format_html('<a href="{}">Quitado</a>', f'/admin/movimentos/movimentoscaixa/?lcto_ref={obj.pk}')
     
     
     def formatar_data_vcto(self, obj):
@@ -218,8 +267,8 @@ class PagarReceberAdmin(admin.ModelAdmin):
     campos_concatenados.short_description = 'Pessoa e Valor'
     botao_pagar.short_description = 'Quitar'
 
-    list_display = ('formatar_data_vcto',  'campos_concatenados', 'botao_pagar','descricao', 'especie')
-    list_filter = ('especie', FiltroPagamentos, FiltroRecebimentos,
+    list_display = ('formatar_data_vcto',  'campos_concatenados', 'botao_pagar','descricao', 'nro_docto', 'especie')
+    list_filter = (ConcatenatedFieldFilter, 'especie', FiltroPagamentos, FiltroRecebimentos,
                    'data_atualizacao',  ('data_vcto', CustomDateRangeFilter), 'centro_custo', 'item_orcamento')
     readonly_fields = ['valor_docto', 'valor_pago', 'status',
                        'data_criacao', 'data_atualizacao', 'usuario']
@@ -230,6 +279,11 @@ class PagarReceberAdmin(admin.ModelAdmin):
             'all': ('movimentos.css',)
         }
         js = ("form_pagar_receber.js",)
+
+
+
+
+
 
 
 
@@ -271,9 +325,32 @@ class MovimentoAdmin(admin.ModelAdmin):
         ContasFilter, 'data_lcto', ('data_lcto', CustomDateRangeFilter),
     )
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        lcto_ref = request.GET.get('lcto_ref')
+        if lcto_ref:
+            queryset = queryset.filter(lcto_ref__id=lcto_ref)
+        return queryset
+
     def get_changelist(self, request, **kwargs):
         return MyChangeList
     readonly_fields = ['data_criacao', 'data_atualizacao', 'usuario']
+
+    def add_view(self, request, form_url='', extra_context=None):
+        if 'origem' in request.GET:  # Ajuste conforme o nome real do parâmetro
+            self.add_form_template = 'form_movimentos.html'
+        else:
+            self.add_form_template = None  # Usa o template padrão se não houver 'origem'
+        return super().add_view(request, form_url, extra_context)
+    
+    def response_add(self, request, obj):
+        print(request.POST)
+        response = super().response_add(request, obj)
+        if "_quitar" in request.POST:
+            print("Quitar")
+            # Redirecionar para a URL desejada após salvar
+            return HttpResponseRedirect("/admin/movimentos/pagarreceber/")
+        return response
 
     class Media:
         js = ("jquery-3.6.3.min.js", "form.js",)
