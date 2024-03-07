@@ -34,12 +34,12 @@ def upload_to_lancamentos(instance, filename):
         mes = instance.data_vcto.strftime("%m")
         ano = instance.data_vcto.strftime("%Y")
         dia = instance.data_vcto.strftime("%d")
-        descricao = instance.descricao[0:40]
+        descricao = instance.descricao[0:40].replace('/', '_')
     else:
         mes = instance.lcto.data_vcto.strftime("%m")
         ano = instance.lcto.data_vcto.strftime("%Y")
         dia = instance.lcto.data_vcto.strftime("%d")
-        descricao = instance.lcto.descricao[0:40]
+        descricao = instance.lcto.descricao[0:40].replace('/', '_')
 
     if (instance.pk is None):
         id = 0
@@ -52,7 +52,7 @@ def upload_to_lancamentos(instance, filename):
     numero_hex = format(numero_aleatorio, 'x')
 
     name_without_extension, extension = os.path.splitext(filename)
-    arquivo = sanitize_filename(dia+'_'+mes+'_'+ano+'_'+descricao+'_'+numero_hex)
+    arquivo = sanitize_filename(dia+'_'+mes+'_'+ano+'_'+descricao+'_'+numero_hex).replace('/', '_')
     new_filename = f"doc_{arquivo}{extension}"
     # Construa o caminho completo para upload
     return os.path.join("lancamentos", str(ano), str(mes), new_filename)
@@ -67,7 +67,7 @@ def upload_to_movimentos(instance, filename):
     
 
     name_without_extension, extension = os.path.splitext(filename)
-    arquivo = sanitize_filename(dia+'_'+mes+'_'+ano+'_'+instance.historico[0:40])
+    arquivo = sanitize_filename(dia+'_'+mes+'_'+ano+'_'+instance.historico[0:40]).replace('/', '_')
     new_filename = f"compr_{arquivo}{extension}"
 
     # Construa o caminho completo para upload
