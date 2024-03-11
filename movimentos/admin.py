@@ -314,7 +314,11 @@ class MovimentoAdmin(admin.ModelAdmin):
         initial = super().get_changeform_initial_data(request)
         lcto_ref = request.GET.get('lcto_ref')
         if lcto_ref:
+            
             lcto = PagarReceber.objects.get(pk=lcto_ref)
+            if lcto.nro_docto == None:
+                lcto.nro_docto = ''
+
             historico = lcto.descricao  + ' - ' + lcto.nro_docto + ' - ' + lcto.data_vcto.strftime('%d/%m/%Y') + ' - ' + str(lcto.valor_docto) + ' - ' + lcto.pessoa.nome [0:300]
             if lcto.especie.tipo == 'D':
                 historico = f"Recebimento de {historico}"
