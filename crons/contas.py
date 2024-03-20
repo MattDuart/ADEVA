@@ -207,7 +207,7 @@ def send_mail_com_anexo(arquivos, corpo):
         'SIGA - Notificação diária de pagamentos - EM TESTE', # tirar EM TESTE
         corpo,
         'notificacao@siga.adeva.org.br',
-        ['markiano@adeva.org.br', 'sandra.adeva.org.br'],  # mudar para puxar de banco de dados
+        ['markiano@adeva.org.br', 'sandra@adeva.org.br'],  # mudar para puxar de banco de dados
         bcc=['matt@solonoi.org']  # tirar
     )
 
