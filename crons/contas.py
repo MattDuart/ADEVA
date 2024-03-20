@@ -204,11 +204,11 @@ def gerar_excel_pagamentos():
 def send_mail_com_anexo(arquivos, corpo):
     # Crie um objeto EmailMessage
     email = EmailMessage(
-        'SIGA - Notificação diária de pagamentos - EM TESTE', 
+        'SIGA - Notificação diária de pagamentos - EM TESTE', # tirar EM TESTE
         corpo,
         'notificacao@siga.adeva.org.br',
-        ['matt@solonoi.org'],
-        bcc=['matt@solonoi.org']
+        ['markiano@adeva.org.br', 'sandra.adeva.org.br'],  # mudar para puxar de banco de dados
+        bcc=['matt@solonoi.org']  # tirar
     )
 
  
