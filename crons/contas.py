@@ -6,7 +6,7 @@ import xlsxwriter
 from django.core.mail import EmailMessage
 from django.utils import timezone
 from datetime import date, timedelta
-
+from django.db.models import F
 
 # Obtém o diretório do script atual
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -43,7 +43,7 @@ def gerar_excel_pagamentos():
             else:
                 data = data_atual - timedelta(days=1)
             # Filtra os pagamentos vencidos
-            pagamentos = PagarReceber.objects.filter(data_vcto__lt=data).filter(especie__tipo='O').exclude(status='TP')
+            pagamentos = PagarReceber.objects.filter(data_vcto__lt=data).filter(especie__tipo='O').exclude(status='TP').exclude(valor_docto=F('valor_pago'))
             nome = relatorio+'_'+date.today().strftime('%d_%m_%Y')
             corpo += '\nVencidos e não quitados até ontem: \n'
 
@@ -51,14 +51,14 @@ def gerar_excel_pagamentos():
             # Filtra os pagamentos para hoje
             if dia_da_semana == 0:  #segunda-feira
                 data = data_atual - timedelta(days=2)
-                pagamentos = PagarReceber.objects.filter(data_vcto__gte=data, data_vcto__lte=data_atual).filter(especie__tipo='O').exclude(status='TP')
+                pagamentos = PagarReceber.objects.filter(data_vcto__gte=data, data_vcto__lte=data_atual).filter(especie__tipo='O').exclude(status='TP').exclude(valor_docto=F('valor_pago'))
             else:
-                pagamentos = PagarReceber.objects.filter(data_vcto=data_atual).filter(especie__tipo='O').exclude(status='TP')
+                pagamentos = PagarReceber.objects.filter(data_vcto=data_atual).filter(especie__tipo='O').exclude(status='TP').exclude(valor_docto=F('valor_pago'))
 
             nome = relatorio+'_'+date.today().strftime('%d_%m_%Y')
             corpo += 'Pagamentos para hoje: \n'
         else:
-            pagamentos = PagarReceber.objects.filter(data_vcto__gt=data_atual, data_vcto__lte=data_limite)
+            pagamentos = PagarReceber.objects.filter(data_vcto__gt=data_atual, data_vcto__lte=data_limite).filter(especie__tipo='O').exclude(status='TP').exclude(valor_docto=F('valor_pago'))
             nome = relatorio+'_'+date.today().strftime('%d_%m_%Y')
             corpo += '\nPróximos 10 dias: \n'
 
@@ -112,7 +112,7 @@ def gerar_excel_pagamentos():
         i = 0
         total = 0
         for item in pagamentos:
-            data = item.data_lcto.strftime('%d/%m/%Y')
+            data = item.data_vcto.strftime('%d/%m/%Y')
             descricao = item.descricao
             pessoa = item.pessoa.nome
             valor = item.valor_docto
