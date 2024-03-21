@@ -309,7 +309,7 @@ class MovimentosCaixa(models.Model):
 
     lcto_ref = models.ForeignKey(
         PagarReceber,
-        models.SET_NULL,
+        models.CASCADE,
         related_name='mov_lcto',
         null=True,
         blank=True,

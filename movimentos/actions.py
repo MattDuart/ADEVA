@@ -409,7 +409,7 @@ def gerar_excel_pagamentos(modeladmin, request, queryset):
 
     i = 0
     for item in pagamentos:
-        data = item.data_lcto.strftime('%d/%m/%Y')
+        data = item.data_vcto.strftime('%d/%m/%Y')
         descricao = item.descricao
         pessoa = item.pessoa.nome
         valor = item.valor_docto

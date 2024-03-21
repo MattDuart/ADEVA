@@ -1,33 +1,59 @@
 {% extends "admin/base_site.html" %}
 
+{% block extrastyle %}
+<style>
+    .custom-form-row {
+        margin-bottom: 15px; /* Aumenta o espaçamento entre as linhas */
+    }
+    .custom-form-row label {
+        display: inline-block;
+        width: 120px; /* Largura fixa para os labels */
+        text-align: left;
+        margin-right: 10px; /* Espaçamento entre o label e o campo */
+    }
+    .custom-form-row input, .custom-form-row select {
+        width: 200px; /* Largura dos campos de entrada */
+    }
+    .tti {
+        margin-bottom: 15px;
+    }   
+</style>
+{% endblock %}
+
 {% block content %}
-    <!-- Custom content here -->
-    <p>Preencha com os filtros desejados:</p>
-    <form action="{% url 'movimentos:relatorio_final_detalhado' %}" method="post">
-    {% csrf_token %}
-    <label for="mes">Mês<input type ="number" name="mes" id="mes"></label>
-    <br>
-    <label for="ano">Ano
-    <input type ="number" name="ano" id="ano"></label>
-    <br>
-    <label for="centro_custo">Projeto
-    <select name="centro_custo" id="centro_custo">
-    <option value="all">Todos</option>
-    {% for centro_custo in centros_custos %}
-        <option value="{{ centro_custo.id }}">{{ centro_custo.descricao }}</option>
-    {% endfor %}
-    </select>
-    </label>
-    <br>
-    <label for="orcamento"> Item Orçamentário
-    <select name="orcamento" id="orcamento">
-    <option value="all">Todos</option>
-    {% for orcamento in orcamentos %}
-        <option value="{{ orcamento.id }}">{{ orcamento.descricao }}</option>
-    {% endfor %}
-    </select>
-    </label>
-    <br>
-    <input type="submit">
+<div class="module">
+    <div class="tti"><strong>Preencha com os filtros desejados:</strong></div>
+    <form action="{% url 'movimentos:relatorio_final_detalhado' %}" method="post" class="form">
+        {% csrf_token %}
+        <div class="custom-form-row">
+            <label for="mes">Mês:</label>
+            <input type="number" name="mes" id="mes">
+        </div>
+        <div class="custom-form-row">
+            <label for="ano">Ano:</label>
+            <input type="number" name="ano" id="ano">
+        </div>
+        <div class="custom-form-row">
+            <label for="centro_custo">Projeto:</label>
+            <select name="centro_custo" id="centro_custo">
+                <option value="all">Todos</option>
+                {% for centro_custo in centros_custos %}
+                    <option value="{{ centro_custo.id }}">{{ centro_custo.descricao }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="custom-form-row">
+            <label for="orcamento">Item Orçamentário:</label>
+            <select name="orcamento" id="orcamento">
+                <option value="all">Todos</option>
+                {% for orcamento in orcamentos %}
+                    <option value="{{ orcamento.id }}">{{ orcamento.descricao }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="custom-form-row">
+            <input type="submit" value="Enviar">
+        </div>
     </form>
+</div>
 {% endblock %}

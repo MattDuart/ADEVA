@@ -7,10 +7,10 @@ from django.contrib import admin
 class Especie(models.Model):
     descricao = models.CharField(
         "Descrição da Espécie do título",
-        max_length=150
+        max_length=150 
     )
     TIPOS_ESPECIES = [
-        ('D', 'Recebiimento'),
+        ('D', 'Recebimento'),
         ('O', 'Pagamento'),
     ]
 

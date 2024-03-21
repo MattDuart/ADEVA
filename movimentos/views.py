@@ -594,6 +594,9 @@ def download_documentos(request):
     month = int(request.POST['mes'])  # Obtém o valor do parâmetro 'mes' da URL
     year = int(request.POST['ano'])  # Obtém o valor do parâmetro 'ano' da URL
 
+    if year < 1000:
+        year = year + 2000
+
     last_day = calendar.monthrange(year, month)[1]
     start_date = datetime(year=year, month=month, day=1)
     end_date = datetime(year=year, month=month, day=last_day)
@@ -612,6 +615,13 @@ def download_documentos(request):
             arquivo = os.path.normpath(os.path.join(
                 caminho, str(item.lcto_ref.image)))
             arquivos_filtrados.append(arquivo)
+
+        # outros arquivos
+        for arq in item.lcto_ref.lcto_arquivos.all():
+            arquivo = os.path.normpath(os.path.join(caminho, str(arq.image))
+                                       )
+            arquivos_filtrados.append(arquivo)
+       
         # arquivos de comprovantes
         if item.image:
             arquivo = os.path.normpath(os.path.join(caminho, str(item.image)))

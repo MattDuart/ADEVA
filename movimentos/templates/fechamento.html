@@ -1,25 +1,51 @@
 {% extends "admin/base_site.html" %}
 
-{% block content %}
-    <!-- Custom content here -->
-    <p>Digite o mês e o ano desejados para geração do livro caixa:</p>
-    <form action="{% url 'movimentos:relatorio_fechamento' %}" method="post">
-    {% csrf_token %}
-    <label for="mes">Mês
-    <input type ="number" name="mes" id="mes"></label>
-    <br>
-    <label for="ano">Ano
-    <input type ="number" name="ano" id="ano"></label>
-    <br>
-    <label for="conta">Conta
-    <select name="conta" id="conta">
-    <option value="all">Relatório Geral</option>
-    {% for conta in contas %}
-        <option value="{{ conta.id }}">{{ conta.nome }}</option>
-    {% endfor %}
-    </select>
-    </label>
-    <br>
-    <input type="submit">
-    </form>
+{% block extrastyle %}
+<style>
+    .custom-form-row {
+        margin-bottom: 15px; /* Aumenta o espaçamento entre as linhas */
+    }
+    .custom-form-row label {
+        display: inline-block;
+        width: 50px; /* Largura fixa para os labels */
+        text-align: left;
+        margin-right: 10px; /* Espaçamento entre o label e o campo */
+    }
+    .custom-form-row input, .custom-form-row select {
+        width: 200px; /* Largura dos campos de entrada */
+    }
+    .tti {
+        margin-bottom: 15px;
+    }   
+</style>
 {% endblock %}
+
+{% block content %}
+<div class="module">
+    <div class="tti"><strong>Digite o mês e o ano desejados para geração do livro caixa:</strong></div>
+    <form action="{% url 'movimentos:relatorio_fechamento' %}" method="post" class="form">
+        {% csrf_token %}
+        <div class="custom-form-row">
+            <label for="mes">Mês:</label>
+            <input type="number" name="mes" id="mes">
+        </div>
+        <div class="custom-form-row">
+            <label for="ano">Ano:</label>
+            <input type="number" name="ano" id="ano">
+        </div>
+        <div class="custom-form-row">
+            <label for="conta">Conta:</label>
+            <select name="conta" id="conta">
+                <option value="all">Relatório Geral</option>
+                {% for conta in contas %}
+                    <option value="{{ conta.id }}">{{ conta.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="custom-form-row">
+            <input type="submit" value="Enviar">
+        </div>
+    </form>
+</div>
+{% endblock %}
+
