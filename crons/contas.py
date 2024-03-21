@@ -67,9 +67,13 @@ def gerar_excel_pagamentos():
             corpo += 'Nenhum pagamento encontrado para o período.\n'
             continue
 
-        
-        file_path = f'crons/{nome}.xlsx'
+        diretorio_atual = os.getcwd()
+        nome_arquivo = f'{nome}.xlsx'
 
+# Construindo o caminho completo do arquivo
+        file_path = os.path.join(diretorio_atual, nome_arquivo)
+
+        
         arquivos.append(file_path)
 
         workbook = xlsxwriter.Workbook(file_path, {'in_memory': True})
