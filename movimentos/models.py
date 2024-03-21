@@ -311,7 +311,7 @@ class MovimentosCaixa(models.Model):
         PagarReceber,
         models.CASCADE,
         related_name='mov_lcto',
-        null=True,
+        null=True, 
         blank=True,
         verbose_name="Lançamento de Referência"
     )
