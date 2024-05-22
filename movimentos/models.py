@@ -195,6 +195,20 @@ class PagarReceber(models.Model):
         blank=True
     )
 
+    obs_emissao_notas = models.TextField(
+        null=True,
+        blank=True,
+        help_text="Dados para orientação de emissão de nota fiscal",
+        verbose_name="Descriçao para emissão de notas fiscais (quando aplicável)"
+    )
+
+    data_limite_emissao_nota = models.DateField(
+        "Data limite para emissão de nota fiscal (quando aplicável)",
+        null=True,
+        blank=True,
+        help_text="Data limite para emissão de nota fiscal em casos de MEI ou outros casos específicos"
+    )
+
     observacoes = models.TextField(
         null=True,
         blank=True,
