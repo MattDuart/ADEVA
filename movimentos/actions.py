@@ -176,7 +176,7 @@ def print_recibo_lcto(modeladmin, request, queryset):
             data = recibo[0].data_recibo.strftime('%d/%m/%Y')
             numero = recibo[0].pk
         else:
-            data = date.today()
+            data = item.data_vcto
             novo_recibo = RecibosMaster(lancamento=item, data_recibo=data)
             data = data.strftime('%d/%m/%Y')
             novo_recibo.save()
@@ -286,7 +286,7 @@ def print_recibo_lcto(modeladmin, request, queryset):
         pdf.cell(40, 12, 'VALOR', 1, 1, 'C')
 
         for item in itens:
-            pdf.cell(100, 10, item[0], 1, 0, 'L')
+            pdf.cell(100, 10, item[0][0:45], 1, 0, 'L')
             pdf.cell(50, 10, item[1], 1, 0, 'C')
             pdf.cell(40, 10, f"{item[2]:,.2f}".replace(
                 ',', '#').replace('.', ',').replace('#', '.'), 1, 1, 'C')
@@ -351,6 +351,164 @@ def print_recibo_lcto(modeladmin, request, queryset):
     shutil.rmtree(temp_dir)
 
     return response
+
+
+
+
+@admin.action(description='Imprimir Dados Para Nota Fiscal')
+def print_data_invoice(modeladmin, request, queryset):
+    temp_dir = tempfile.mkdtemp()
+
+    i = 0
+
+    for item in queryset:
+        itens = []
+
+       
+
+        dados_para_nota = item.obs_emissao_notas
+        data_limite = item.data_limite_emissao_nota
+
+        email = item.pessoa.email
+
+
+       
+        nome = item.pessoa.nome
+        if (item.pessoa.tipo == 'F'):
+            tipo_desc = 'NOME'
+            tipo_doc = 'CPF'
+            documento = item.pessoa.pessoasfisicas.cpf
+           
+        else:
+            tipo_desc = 'RAZÃO SOCIAL'
+            tipo_doc = 'CNPJ'
+            documento = item.pessoa.pessoasjuridicas.cnpj
+        
+
+        
+       
+     
+        if data_limite:
+            data = data_limite.strftime('%d/%m/%Y')
+        else:
+            data = None
+
+
+        # verificar se já existe recibo
+
+ 
+
+        
+        texto = ''
+        if item.especie.tipo == 'O':
+            texto = 'ASSOCIAÇÃO DE DEFICIENTES VISUAIS E AMIGOS - ADEVA \n CNPJ: 50.599.638/0001-69'
+        else:
+            texto = item.pessoa.nome + '\n DOC. Nro: ' + documento
+            nome = 'ASSOCIAÇÃO DE DEFICIENTES VISUAIS E AMIGOS - ADEVA'
+            documento = '50.599.638/0001-69'
+
+        total = item.valor_docto
+        conta = nome
+
+        
+
+        pdf = FPDF()
+
+        pdf.add_page('P')
+
+        pdf.set_font('Arial', '', 25)
+        pdf.set_line_width(0.5)
+
+        pdf.set_xy(10, 12)
+
+        pdf.multi_cell(180, 20, 'DADOS PARA EMISSÃO DE NOTA', 0, 'C', fill=False)
+        pdf.set_xy(140, 12)
+        
+        pdf.ln(25)
+        pdf.set_x(10)
+
+        pdf.set_font('Arial', 'B', 14)
+        
+
+        pdf.cell(40, 12, tipo_desc + ":", 0, 0, 'L')
+        pdf.cell(150, 12, nome, 0, 1, 'L')
+
+        
+    #  pdf.multi_cell(40, 20, 'NOME', 1, 'C', fill=False)
+        x = pdf.get_x()
+        pdf.set_x(x)
+    # pdf.multi_cell(150, 20, 'NOME', 1, 'L', fill=False)
+        y = pdf.get_y()
+        pdf.cell(20, 12, tipo_doc + ":", 0, 0, 'L')
+        pdf.cell(150, 12, documento, 0, 1, 'L')
+
+        if email:
+            pdf.cell(40, 12, 'E-mail:', 0, 0, 'L')
+            pdf.cell(150, 12, email, 0, 1, 'L')
+
+
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(190, 12, 'EMITIR NOTA PARA:', 0, 1, 'L')
+        pdf.set_font('Arial', '', 12)
+        pdf.multi_cell(190, 10, texto, 0, 'L')
+        pdf.set_font('Arial', 'B', 12)
+        pdf.cell(190, 12, 'Enviar nota para o e-mail: cursos@adeva.org.br:', 0, 1, 'L')
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(190, 12, 'Descrição do Serviço:', 0, 1, 'L')
+        pdf.set_font('Arial', '', 12)
+        
+        pdf.multi_cell(190, 8, dados_para_nota, 0, 'L')
+       
+        pdf.set_font('Arial', 'B', 12)
+        pdf.cell(150, 12, 'Valor Total da Nota: ' +  f"{total:,.2f}".replace(',', '#').replace(
+            '.', ',').replace('#', '.') , 0, 1, 'L')
+       
+        if data:
+            pdf.cell(150, 12, 'Emitir a nota até o dia: ' + data, 0, 1, 'L')
+       
+        
+       
+
+
+
+        pdf_file_path = f'{temp_dir}/{conta}.pdf'
+        pdf.output(pdf_file_path)
+        i += 1
+
+    zip_file_path = f'{temp_dir}/recibos.zip'
+
+    number_files = count_files_in_temporary_folder(temp_dir)
+
+    if number_files == 1:
+        pdf_bytes = pdf.output(dest='S').encode('latin1')
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename={conta}.pdf'
+
+    else:
+        file_list = os.listdir(temp_dir)
+
+        # Filter out directories from the file list
+        file_names = [f for f in file_list if os.path.isfile(
+            os.path.join(temp_dir, f))]
+        with zipfile.ZipFile(zip_file_path, 'w') as zip_file:
+            for c in file_names:
+                pdf_file_path = f'{temp_dir}/{c}'
+                zip_file.write(pdf_file_path, f'{c}')
+
+        hoje = datetime.now().strftime('%d_%m_%Y')
+        # Read the zip file data and send it as the response
+        with open(zip_file_path, 'rb') as file:
+            response = HttpResponse(
+                file.read(), content_type='application/zip')
+            response['Content-Disposition'] = f'attachment; filename="recibos_{hoje}.zip"'
+
+    # Cleanup: Delete the temporary directory and its contents
+    shutil.rmtree(temp_dir)
+
+    return response
+
+
+
 
 
 #    pdf_bytes = pdf.output(dest='S').encode('latin1')

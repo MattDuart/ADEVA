@@ -16,7 +16,7 @@ from .models import PagarReceber, MovimentosCaixa, RecibosMaster, LctoDetalhe, O
 from configuracoes.models import Contas
 from django.contrib.admin.filters import SimpleListFilter
 from django.db.models import Sum
-from .actions import print_recibo_lcto, gerar_excel_pagamentos, download_doc, print_selected
+from .actions import print_recibo_lcto, gerar_excel_pagamentos, download_doc, print_selected, print_data_invoice
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
@@ -146,7 +146,7 @@ class OutrosArquivosInline(admin.TabularInline):
 @admin.register(PagarReceber)
 class PagarReceberAdmin(admin.ModelAdmin):
     inlines = [OutrosArquivosInline, LctoDetalheInline,]
-    actions = [print_recibo_lcto, gerar_excel_pagamentos, download_doc, print_selected]
+    actions = [print_recibo_lcto, gerar_excel_pagamentos, download_doc, print_selected, print_data_invoice]
 
     change_form_template = 'form_pagarreceber.html'
     add_form_template = 'form_pagarreceber.html'
