@@ -17,3 +17,15 @@ DATABASES = {
         'PORT': '3306',
     }
 }
+
+
+# Configuração do e-mail
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'siga.adeva.org.br'
+EMAIL_PORT = 465
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True 
+EMAIL_HOST_USER = 'notificacao@siga.adeva.org.br'  # Insira seu endereço de e-mail aqui
+EMAIL_HOST_PASSWORD = 'rc4EpFQ^DE@#7XuFp!8'  # Insira sua senha aqui ou utilize variáveis de ambiente
+
+

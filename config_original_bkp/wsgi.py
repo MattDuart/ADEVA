@@ -1,3 +1,7 @@
+import sys
+sys.path.append('/home/giaadeva/sistema')
+
+from django.core.wsgi import get_wsgi_application
 """
 WSGI config for adeva_project project.
 
