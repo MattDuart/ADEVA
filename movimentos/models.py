@@ -325,7 +325,7 @@ class MovimentosCaixa(models.Model):
 
     lcto_ref = models.ForeignKey(
         PagarReceber,
-        models.CASCADE,
+        on_delete=models.SET_NULL,  # Set the field to null when the referenced object is deleted
         related_name='mov_lcto',
         null=True, 
         blank=True,
@@ -388,7 +388,15 @@ class MovimentosCaixa(models.Model):
         verbose_name_plural = "Movimentações de Caixa"
 
     def __str__(self):
-        return f"{self.historico} em {self.data_lcto.strftime('%d/%m/%Y')} - Valor Pgto : {self.valor} / Valor Lcto : {self.lcto_ref.valor_docto} - Projeto: {self.lcto_ref.centro_custo} - Item Orçamentário: {self.lcto_ref.item_orcamento}" 
+        if self.tipo == 'TR':
+             return f"Transferência entre contas - {self.historico} em {self.data_lcto.strftime('%d/%m/%Y')} - Valor Pgto : {self.valor} - Conta Origem: {self.conta_origem} - Conta Destino: {self.conta_destino}"
+
+        if self.tipo == 'SI':
+            return f"Lançamento de Saldo Inicial/Ajuste: {self.historico} em {self.data_lcto.strftime('%d/%m/%Y')} - Valor Pgto : {self.valor}"
+    
+        else:
+            return f"{self.historico} em {self.data_lcto.strftime('%d/%m/%Y')} - Valor Pgto : {self.valor} / Valor Lcto : {self.lcto_ref.valor_docto} - Projeto: {self.lcto_ref.centro_custo} - Item Orçamentário: {self.lcto_ref.item_orcamento}" 
+    
 
 
 class RecibosMaster(models.Model):
