@@ -395,6 +395,8 @@ class MovimentosCaixa(models.Model):
             return f"Lançamento de Saldo Inicial/Ajuste: {self.historico} em {self.data_lcto.strftime('%d/%m/%Y')} - Valor Pgto : {self.valor}"
     
         else:
+            if self.lcto_ref is None:
+                return f"{self.historico} em {self.data_lcto.strftime('%d/%m/%Y')} - Valor Pgto : {self.valor}"
             return f"{self.historico} em {self.data_lcto.strftime('%d/%m/%Y')} - Valor Pgto : {self.valor} / Valor Lcto : {self.lcto_ref.valor_docto} - Projeto: {self.lcto_ref.centro_custo} - Item Orçamentário: {self.lcto_ref.item_orcamento}" 
     
 
