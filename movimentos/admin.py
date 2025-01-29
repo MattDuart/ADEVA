@@ -12,7 +12,7 @@ from django.contrib.admin.filters import DateFieldListFilter
 from django.contrib.admin.views.main import ChangeList
 from django.forms.models import BaseInlineFormSet
 # Register your models here.
-from .models import PagarReceber, MovimentosCaixa, RecibosMaster, LctoDetalhe, OutrosArquivosLcto
+from .models import PagarReceber, MovimentosCaixa, RecibosMaster, LctoDetalhe, OutrosArquivosLcto, OutrosDocumentosContabeis
 from configuracoes.models import Contas
 from django.contrib.admin.filters import SimpleListFilter
 from django.db.models import Sum
@@ -373,4 +373,4 @@ class MovimentoAdmin(admin.ModelAdmin):
         js = ("jquery-3.6.3.min.js", "form.js",)
 
 # admin.site.register(MovimentosCaixa, MovimentoAdmin)
-# admin.site.register(ArquivosContabeis)
+admin.site.register(OutrosDocumentosContabeis)

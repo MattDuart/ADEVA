@@ -74,6 +74,23 @@ def upload_to_movimentos(instance, filename):
     return os.path.join("movimentos", str(ano), str(mes), new_filename)
 
 
+def upload_to_documentos_contabeis(instance, filename):
+    # instance.save()
+    # Gere um novo nome de arquivo para evitar conflitos
+    mes = instance.ultimo_dia_mes_referencia.strftime("%m")
+    ano = instance.ultimo_dia_mes_referencia.strftime("%Y")
+    dia = instance.ultimo_dia_mes_referencia.strftime("%d")
+    
+
+    name_without_extension, extension = os.path.splitext(filename)
+    arquivo = sanitize_filename(dia+'_'+mes+'_'+ano+'_'+instance.descricao[0:40]).replace('/', '_')
+    new_filename = f"outros_docs_{arquivo}{extension}"
+
+    # Construa o caminho completo para upload
+    return os.path.join("movimentos", str(ano), str(mes), new_filename)
+
+
+
 class PagarReceber(models.Model):
     data_lcto = models.DateField(
         "Data do Lançamento",
@@ -418,3 +435,18 @@ class RecibosMaster(models.Model):
 
     def __str__(self):
         return f"Recibo de {self.lancamento.descricao} emitido em {self.data_recibo.strftime('%d/%m/%Y')}"
+
+
+class OutrosDocumentosContabeis(models.Model):
+    ultimo_dia_mes_referencia = models.DateField('Último dia do mês de referência', db_index=True)
+    descricao = models.CharField('Descrição do documento', max_length=100)
+    arquivo = models.FileField('Arquivo a ser carregado', upload_to=upload_to_documentos_contabeis)
+    observacoes = models.TextField('Observações', null=True, blank=True)
+
+    class Meta:
+        ordering = ('-ultimo_dia_mes_referencia', )
+        verbose_name = "Documento Contábil"
+        verbose_name_plural = "Outros Documentos Contábeis"
+
+    def __str__(self):
+        return f"{self.descricao} referente ao mês de {self.ultimo_dia_mes_referencia.strftime('%m/%Y')}"

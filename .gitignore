@@ -19,3 +19,4 @@ config_original_bkp
 
 wsgi.py
 settings.py
+local_settings.py
